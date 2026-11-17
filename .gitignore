@@ -1,0 +1,26 @@
+# secrets
+.env*
+!.env.example
+
+# scratch, tool caches, planning
+.tmp/
+.playwright-mcp/
+.planning/
+__pycache__/
+.DS_Store
+
+# personal league material: league docs, screenshots of league pages,
+# task notes and the auction-day runbook (they name other league members)
+*.docx
+/*.png
+/*.yml
+tasks/
+workflows/auction-day.md
+
+# build output (the standalone board and the how-to guide embed league data)
+GCCFFL-*.html
+
+# runtime state and caches written during a draft; keep only the player data the boards load
+data/*
+!data/players.json
+!data/notes.json

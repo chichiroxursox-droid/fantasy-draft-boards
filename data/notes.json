@@ -1,0 +1,285 @@
+{
+ "updated": "2026-08-29",
+ "notes": {
+  "Ja'Marr Chase": {
+   "action": "monitor",
+   "note": "Hyperextended knee at practice Aug 25, sat Aug 26 as precaution. Says he's 'fine' and would play if there were a game; expected ready Week 1 but hadn't resumed full practice as of Aug 26. Still worth top dollar \u2014 just confirm practice status draft morning.",
+   "src": "ESPN / Fox19 Cincinnati, Aug 25-26, 2026"
+  },
+  "Christian McCaffrey": {
+   "action": "monitor",
+   "note": "Did not practice Aug 8-23 with 'tightness' (team framed as load management); returned to full 11-on-11 Aug 23 and expected to start Week 1 vs Rams. A 2-week August absence at age 30 with his history justifies not paying peak price, but he's draftable.",
+   "src": "nbcsports.com fantasy player news, Aug 23, 2026"
+  },
+  "Jahmyr Gibbs": {
+   "action": "monitor",
+   "note": "Back injury cost him first six camp practices, then a hamstring kept him out of preseason. Campbell says on schedule; Gibbs says near 100% and expects Week 1. Contract resolved (3yr/$67.5M). Risk is soft-tissue recurrence, not Week 1 availability.",
+   "src": "detroitnews.com Jul 31 + Aug 6, 2026; detroitlions.com Lions Daily"
+  },
+  "Ashton Jeanty": {
+   "action": "opportunity",
+   "note": "Low (not high) ankle sprain Aug 23-25; as of Aug 27 'not cleared and not ruled out' for Sept 13 opener. Biggest injury cloud on a 1st/2nd-round asset \u2014 worst case looks like 1-2 games, so if the room panics and his price craters, buy the dip.",
+   "src": "NBC Sports player news Aug 25, 2026; Las Vegas Review-Journal"
+  },
+  "Puka Nacua": {
+   "action": "opportunity",
+   "note": "Two overhangs: psoas soreness from Aug 11 (progressing, trending toward Week 1) and pending NFL personal-conduct review with a ~1-game suspension floated for the Week 1 Australia game. Combined worst case is ~1 game of 17 (~6%) \u2014 headlines may depress his price well below that.",
+   "src": "therams.com injury update Aug 2026; sports.yahoo.com suspension report"
+  },
+  "Malik Nabers": {
+   "action": "discount",
+   "note": "ACL return: back in full-speed team drills, coach says 'reasonable to assume' Week 1 but Nabers won't commit, plus an Aug 26-27 early practice exit (team says no injury). Price in ~1-2 missed games plus an early-season ramp \u2014 roughly 5-10% of the season at risk.",
+   "src": "SI Giants OnSI / Heavy.com / LastWordOnSports, Aug 26-28, 2026"
+  },
+  "Josh Jacobs": {
+   "action": "discount",
+   "note": "Groin resolved (returned Aug 18, team says no Week 1 impact). Real risk: formally charged Aug 27 with misdemeanor battery + criminal damage; NFL weighing personal-conduct discipline and GM says Packers are preparing for a suspension scenario. Unresolved 2-6 game suspension risk = roughly 10-35% of the season.",
+   "src": "RotoBaller/Heavy.com Aug 27-28, 2026; NBC Sports PFT Aug 18, 2026; ESP"
+  },
+  "CeeDee Lamb": {
+   "action": "monitor",
+   "note": "Healthy \u2014 the flag is target-share erosion (8.4 targets/gm, 25% RZ rate as Pickens emerged as co-alpha). Still a first-round WR; trim the ceiling, don't avoid.",
+   "src": "fantasypros.com CeeDee Lamb 2026 outlook"
+  },
+  "Justin Jefferson": {
+   "action": "monitor",
+   "note": "Fully practicing, no injury. Drag is situation: career-worst 2025 and now tied to new QB Kyler Murray. Volume should hold; pay alpha-WR price minus a small situation haircut.",
+   "src": "nbcnews.com Vikings 2026 season preview"
+  },
+  "A.J. Brown": {
+   "action": "monitor",
+   "note": "Traded to the Patriots June 1 (new QB Drake Maye, new offense, sat entire preseason). Physically fine \u2014 played through a dislocated thumb. Value him on the Patriots context, not his Eagles profile; the market fade may be roughly right, not an overreaction.",
+   "src": "espn.com trade coverage; sports.yahoo.com thumb story, Aug 2026"
+  },
+  "Breece Hall": {
+   "action": "monitor",
+   "note": "Non-contact groin Aug 17 with a 2-3 week timeline; Glenn says firmly on track for Week 1 vs Tennessee but he'll have little/no practice ramp. Groins linger \u2014 fine at a modest haircut, don't pay full price.",
+   "src": "newyorkjets.com practice report Aug 17, 2026; jetsxfactor.com Aug 18"
+  },
+  "Drake London": {
+   "action": "monitor",
+   "note": "Minor shoulder from preseason Week 1 plus QB flux (Penix off ACL, Tua started the finale) \u2014 experts already cut him $70->$59. Injury is minor; the QB uncertainty is real. Draft at the marked-down price.",
+   "src": "cbssports.com Falcons news, Aug 2026"
+  },
+  "Omarion Hampton": {
+   "action": "monitor",
+   "note": "Healthy, strong camp \u2014 but Chargers publicly threw cold water on a workhorse load, with Vidal and Mitchell slated for real committee work under McDaniel. Don't pay a $65 bell-cow price for a committee lead.",
+   "src": "ftnfantasy.com, Aug 2026"
+  },
+  "Kenneth Walker III": {
+   "action": "monitor",
+   "note": "Now a Chief (4yr/$36M, March 2026). Swollen ankle held him out of the Aug 28 preseason finale; Reid expects him to 'be fine' but it's an active ankle issue ~2 weeks before the season. Confirm status draft morning.",
+   "src": "fieldgulls.com Aug 2026; axios.com Mar 10, 2026"
+  },
+  "Mike Evans": {
+   "action": "monitor",
+   "note": "Now a 49er. Quad strain earlier in camp, then sat Aug 25 with a 'minor' groin \u2014 two soft-tissue issues at 33. 'Likely' for Week 1 in Australia. Draftable with an age/soft-tissue haircut.",
+   "src": "nbcsports.com PFT Aug 25, 2026; rotowire.com; clutchpoints.com"
+  },
+  "Rashee Rice": {
+   "action": "opportunity",
+   "note": "Knee cleanup ramp is done (11-on-11 since ~Aug 11, cleared for Week 1, big projected role) and the suspension overhang looks dead \u2014 jail time served, Rapoport reports no further NFL discipline expected. If the room still prices in suspension fear, that's free value.",
+   "src": "heavy.com / fantasylife.com Aug 12, 2026; si.com Chiefs camp reports"
+  },
+  "Sam LaPorta": {
+   "action": "opportunity",
+   "note": "Aggravated hip; Campbell 'feels like he should be OK for Week 1' but Lions aren't sure. Market ADP has slid well below his expert TE5 rank \u2014 experts call the discount undeserved. Buy the fear, with a small caveat for his 2025 back history (missed 8 games).",
+   "src": "si.com fantasy injuries; Detroit News / NBC Sports PFT Aug 20, 2026"
+  },
+  "Brian Thomas Jr.": {
+   "action": "monitor",
+   "note": "Landed on his left shoulder Aug 24, held out as a precaution; Coen: 'I think he's alright,' expected ready for the opener. Minor \u2014 pay normal price.",
+   "src": "Yahoo Sports / Big Cat Country Aug 25, 2026"
+  },
+  "DeVonta Smith": {
+   "action": "monitor",
+   "note": "Hamstring strain Aug 3 wiped out most of camp/preseason; back to full practice ~Aug 24 and on track for Week 1 with almost no camp reps. Slight early-season ramp risk only.",
+   "src": "Bleeding Green Nation, Aug 24, 2026"
+  },
+  "DK Metcalf": {
+   "action": "monitor",
+   "note": "Out Aug 8-24 with an undisclosed issue; back at practice, says he's fine for Week 1. Also note Pittsburgh added Michael Pittman Jr. \u2014 target competition caps the ceiling slightly.",
+   "src": "rotowire.com Aug 24, 2026; FantasyPros"
+  },
+  "Zay Flowers": {
+   "action": "monitor",
+   "note": "Quad contusion Aug 8, then missed practices Aug 24-26 termed precautionary. Team and RotoWire expect him to play Week 1; ended camp not fully practicing. Minor.",
+   "src": "baltimoreravens.com; RotoWire Aug 26, 2026"
+  },
+  "David Montgomery": {
+   "action": "opportunity",
+   "note": "Traded to Houston and expected to open as the clear lead back ahead of Woody Marks \u2014 a value bump. Any room pricing still anchored to the Detroit committee role is stale; buy it.",
+   "src": "SI Lions OnSI / Pride of Detroit, offseason-Aug 2026"
+  },
+  "Travis Etienne Jr.": {
+   "action": "opportunity",
+   "note": "Signed with the Saints (4yr/$48M), healthy \u2014 and Alvin Kamara's MCL sprain may hand him a true three-down lead role to open the season. Room may still price him as a committee back.",
+   "src": "rotoballer.com, Aug 2026"
+  },
+  "DJ Moore": {
+   "action": "monitor",
+   "note": "Traded to Buffalo in March; healthy and slated as Josh Allen's primary weapon, but new offense and a more crowded target tree. Value him as a Bill, not Chicago's WR1.",
+   "src": "nfl.com, March 2026"
+  },
+  "Jaylen Waddle": {
+   "action": "monitor",
+   "note": "Traded to Denver (Bo Nix / Sean Payton). Early-August leg tightness resolved \u2014 full-pads team drills in late August. Physically fine; just reprice for the new offense.",
+   "src": "espn.com trade analysis; NBC Sports PFT, 2026"
+  },
+  "Emeka Egbuka": {
+   "action": "monitor",
+   "note": "Toe sprain Aug 12; Bowles won't commit on Week 1 but the sprain is stable and analysts think he plays. With Mike Evans gone his target share rises when healthy \u2014 draftable at price.",
+   "src": "si.com fantasy injuries; Bucs Nation, mid-late Aug 2026"
+  },
+  "Quinshon Judkins": {
+   "action": "monitor",
+   "note": "'Nagging' camp injury, held out mid-August as a precaution; back in team drills at full speed and Monken doesn't expect him to miss Week 1. Lead-back path intact.",
+   "src": "si.com fantasy injuries Aug 19-25, 2026; NBC Sports PFT"
+  },
+  "Chuba Hubbard": {
+   "action": "monitor",
+   "note": "Hamstring since ~Aug 13 (week-to-week, missed rest of preseason); team expects him back for Week 1. Added risk: Jonathon Brooks is back taking first-team reps \u2014 committee looms.",
+   "src": "NBC Sports PFT, Aug 25, 2026"
+  },
+  "Jonathon Brooks": {
+   "action": "monitor",
+   "note": "Finally healthy after two ACL years; strong preseason debut with the 1s and Canales says 'ready to rock.' But it's a committee with Hubbard (expected back Week 1) \u2014 workload unsettled, price accordingly.",
+   "src": "panthers.com, Aug 2026"
+  },
+  "TreVeyon Henderson": {
+   "action": "monitor",
+   "note": "Right foot/ankle from slipping on turf ~Aug 24, called likely minor \u2014 but he was already losing the backfield to Rhamondre Stevenson, who's projected as the lead. Injury + role trend = pay change-of-pace price only.",
+   "src": "NBC Sports Boston Aug 2026; RotoBaller"
+  },
+  "Rico Dowdle": {
+   "action": "opportunity",
+   "note": "Listed as Warren's backup but splitting first-team reps evenly, and FOX's Vacchiano (via HC McCarthy) believes he ends up the workhorse in a run-heavy offense. If the room prices him as a backup, he's a value.",
+   "src": "nbcsports.com, Aug 16, 2026"
+  },
+  "Jaylen Warren": {
+   "action": "monitor",
+   "note": "Nominal starter but splitting reps evenly with Dowdle, whom insiders project as the eventual workhorse. Minor mid-August illness irrelevant. Don't pay lead-back price.",
+   "src": "nbcsports.com Aug 16, 2026; behindthesteelcurtain.com"
+  },
+  "Tucker Kraft": {
+   "action": "monitor",
+   "note": "Back from the Nov 2025 ACL \u2014 off PUP early August, first 11-on-11 Aug 17, expected to play Week 1 vs Minnesota. Green Bay being cautious; early-season snap counts may be limited.",
+   "src": "spectrumnews1.com Aug 17, 2026; cbssports.com"
+  },
+  "Tyler Warren": {
+   "action": "monitor",
+   "note": "Minor groin from the ~Aug 19 joint practice ('about a week'; team not worried about the opener), and experts already marked him down $21->$16. The markdown roughly matches the risk \u2014 draft at the reduced price.",
+   "src": "NBC Sports PFT Aug 20, 2026; cbssports.com"
+  },
+  "Colston Loveland": {
+   "action": "opportunity",
+   "note": "No injury \u2014 DJ Moore's exit leaves a target vacuum and Ben Johnson historically funnels targets to his TE. Experts moved him $21->$31; if the room is anchored to last year's price, he's one of the best buys on the board.",
+   "src": "rotoballer.com, Aug 2026"
+  },
+  "Dalton Kincaid": {
+   "action": "opportunity",
+   "note": "Broken pinky he's managing without visible limitation is spooking drafters, while experts project an enhanced role in Pete Carmichael's offense. Classic case of a scary-sounding non-injury depressing price.",
+   "src": "buffalorumblings.com, late Aug 2026"
+  },
+  "Justin Herbert": {
+   "action": "monitor",
+   "note": "Herbert is healthy; his O-line isn't \u2014 C Biadasz expected out for the season (knee) and LT Slater missing practice. Most-hit QB in 2025. Market fade is rational; fine at the discounted price given the McDaniel OC upgrade.",
+   "src": "lasportsreport.com, Aug 2026"
+  },
+  "Michael Pittman Jr.": {
+   "action": "monitor",
+   "note": "Traded to Pittsburgh (3yr/$58M). Healthy; sharing the room with DK Metcalf in a new offense \u2014 reprice off the Indy volume profile.",
+   "src": "colts.com trade announcement, April 2026"
+  },
+  "Stefon Diggs": {
+   "action": "monitor",
+   "note": "Released by NE, signed with Washington ~Aug 5 (1yr/$12M) after a not-guilty verdict in May. Healthy, but a late signing means limited reps in a new offense next to McLaurin.",
+   "src": "espn.com / Boston.com, Aug 5, 2026"
+  },
+  "Josh Downs": {
+   "action": "monitor",
+   "note": "'Very minor' calf kept him out Aug 25-26 (plus an earlier groin blip); likely sits the preseason finale, ready for Week 1 vs Baltimore. Minor.",
+   "src": "NBC Sports player news, Aug 26, 2026"
+  },
+  "Alec Pierce": {
+   "action": "monitor",
+   "note": "Missed the entire offseason and camp after ankle surgery; activated off PUP Aug 27 and signaling early-season availability, possibly Week 1 \u2014 but with essentially zero camp reps. Ramp risk only.",
+   "src": "colts.com Aug 27, 2026; espn.com GM update"
+  },
+  "Luther Burden III": {
+   "action": "monitor",
+   "note": "Groin Aug 8 cost him the whole preseason; returned to individual drills Aug 26, not on any injury list, expected available Week 1 once cleared. Ramping from a 3-week absence.",
+   "src": "bearstalk.com Aug 26, 2026; Chicago Sun-Times Aug 10"
+  },
+  "Quentin Johnston": {
+   "action": "monitor",
+   "note": "Lower-body injury at the late-August 49ers joint practice; Schefter says not expected to miss much time, if any. Second minor issue of camp; WR2 behind McConkey with rookie Tre' Harris pushing. Minor.",
+   "src": "cbssports.com fantasy news, late Aug 2026"
+  },
+  "Wan'Dale Robinson": {
+   "action": "monitor",
+   "note": "Now a Titan. Took a heavy hit Aug 28 and was evaluated for a concussion \u2014 early word is he did NOT suffer one, team still monitoring. Verify draft morning; likely fine.",
+   "src": "athlonsports.com / heavy.com, Aug 28, 2026"
+  },
+  "Jeremiyah Love": {
+   "action": "discount",
+   "note": "Cardinals No. 3 overall pick: high ankle sprain Aug 13, still not practicing in late August (light agility only). Team 'hopeful' for the opener but multiple outlets call Week 1 in real jeopardy \u2014 high ankles linger. Budget for ~2-3 missed games, roughly 12-18% of the season.",
+   "src": "nfl.com; NBC Sports, late Aug 2026"
+  },
+  "Jacory Croskey-Merritt": {
+   "action": "monitor",
+   "note": "Lower-body injury Aug 20, held out of final two preseason games, plan is to practice the week of Aug 31. Commanders view him as RB1, but the room got crowded (White, Ford, Kaytron Allen). Fine at price.",
+   "src": "cbssports.com; NBC Sports player news Aug 24, 2026"
+  },
+  "Jadarian Price": {
+   "action": "monitor",
+   "note": "Seahawks first-round rookie: 'minor' lower-body soreness, held out of the last two preseason games largely as a precaution. Positioned for significant early work with Charbonnet still rehabbing his ACL.",
+   "src": "seahawks.com, late Aug 2026; RotoBaller"
+  },
+  "Zach Charbonnet": {
+   "action": "discount",
+   "note": "On active/PUP in late August rehabbing an ACL tear; Week 1 uncertain. If he opens on reserve/PUP that's a minimum ~4 games \u2014 plan for roughly 25% of the season at risk.",
+   "src": "sharpfootballanalysis.com IR tracker; seahawks.com context"
+  },
+  "Tyrone Tracy Jr.": {
+   "action": "monitor",
+   "note": "Went to the locker room during the Aug 28 preseason game with an apparent neck injury; severity unknown. Check status the morning of the draft before bidding.",
+   "src": "rotowire.com injuries feed, Aug 28, 2026"
+  },
+  "KC Concepcion": {
+   "action": "opportunity",
+   "note": "Dropped 12 ECR spots with no justifying news \u2014 only a minor AC-joint sprain from Aug 3 that he returned from in two days, plus an excellent preseason with the 1s. Looks like rookie repricing, not an event; buy at the depressed price.",
+   "src": "NBC Sports PFT, Aug 2026"
+  },
+  "Blake Corum": {
+   "action": "monitor",
+   "note": "No injury, glowing camp reports \u2014 but McVay plans a two-back split with Kyren Williams starting and preferred. Committee-price him despite the buzz.",
+   "src": "therams.com camp observations, Aug 2026"
+  },
+  "Michael Wilson": {
+   "action": "monitor",
+   "note": "Concussion protocol ~Aug 20; back participating and doing media by Aug 26. Trending fine for Week 1 but was in protocol within the last 10 days.",
+   "src": "azcardinals.com media availability, Aug 26, 2026"
+  },
+  "Marvin Mims Jr.": {
+   "action": "monitor",
+   "note": "Bruised foot in the Aug 28-29 preseason finale. Sounds minor but fresh \u2014 check draft-morning reports.",
+   "src": "rotowire.com injuries feed, Aug 28-29, 2026"
+  },
+  "Parker Washington": {
+   "action": "monitor",
+   "note": "Undisclosed injury, day-to-day, out of the mid-August preseason game; ESPN's DiRocco reported he was expected back for the finale. Trending available. Deep-league only.",
+   "src": "NBC Sports PFT Aug 18, 2026; ESPN via DiRocco"
+  },
+  "Bhayshul Tuten": {
+   "action": "monitor",
+   "note": "No injury \u2014 listed 'Tuten OR Rodriguez' on the Jaguars depth chart, so the September backfield split is unresolved. Don't pay locked-in RB1 price.",
+   "src": "jaguars.com first unofficial depth chart, Aug 2026"
+  },
+  "Jeshaun Jones": {
+   "action": "discount",
+   "note": "Vikings WR suspended the first 3 games (substances of abuse) \u2014 ~18% of the season gone. Deep-league relevance only.",
+   "src": "si.com 2026 suspensions list"
+  }
+ }
+}

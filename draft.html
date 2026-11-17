@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Draft Board</title>
+<style>
+  :root {
+    --bg:#0e1116; --panel:#161b23; --panel2:#1c232e; --line:#2a3341;
+    --text:#e6ebf2; --dim:#8b97a8; --accent:#4da3ff; --green:#3ddc84; --red:#ff5d5d;
+    --QB:#e0656b; --RB:#4fd08a; --WR:#5aa2e8; --TE:#e8a04f; --K:#b07ce8; --DST:#9aa5b1;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--bg); color:var(--text); font:14px/1.45 -apple-system, "SF Pro Text", Segoe UI, Roboto, sans-serif; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
+  button { font:inherit; color:inherit; background:var(--panel2); border:1px solid var(--line); border-radius:6px; padding:4px 10px; cursor:pointer; }
+  button:hover { border-color:var(--accent); }
+  input, select { font:inherit; color:var(--text); background:var(--panel2); border:1px solid var(--line); border-radius:6px; padding:4px 8px; }
+  input:focus, select:focus { outline:none; border-color:var(--accent); }
+
+  /* top bar */
+  #top { display:flex; align-items:center; gap:14px; padding:8px 14px; background:var(--panel); border-bottom:1px solid var(--line); flex:none; }
+  #top .big { font-size:17px; font-weight:700; }
+  #onclock { padding:3px 12px; border-radius:6px; background:var(--panel2); font-weight:700; }
+  #onclock.me { background:var(--green); color:#03130a; animation:pulse 1.2s infinite; }
+  @keyframes pulse { 50% { filter:brightness(1.25);} }
+  #untilme { color:var(--dim); }
+  #top .spacer { flex:1; }
+  .toast { position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:var(--panel2); border:1px solid var(--accent); border-radius:8px; padding:8px 14px; z-index:50; display:flex; gap:12px; align-items:center; }
+
+  /* layout */
+  #main { display:flex; flex:1; min-height:0; }
+  #left { flex:1; display:flex; flex-direction:column; min-width:0; }
+  #right { width:295px; flex:none; border-left:1px solid var(--line); background:var(--panel); overflow-y:auto; padding:10px; }
+
+  /* recommendations */
+  #recs { display:flex; gap:8px; padding:10px 14px; overflow-x:auto; flex:none; background:linear-gradient(180deg, var(--panel), var(--bg)); }
+  .rec { min-width:170px; background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:8px 10px; cursor:pointer; }
+  .rec:hover { border-color:var(--green); }
+  .rec .nm { font-weight:700; white-space:nowrap; }
+  .rec .why { color:var(--dim); font-size:11.5px; margin-top:3px; }
+  .rec .why b { color:var(--text); font-weight:600; }
+  .rec:first-child { border-color:var(--green); box-shadow:0 0 0 1px var(--green) inset; }
+
+  /* table */
+  #tablewrap { flex:1; overflow-y:auto; }
+  #controls { display:flex; gap:8px; padding:6px 14px; align-items:center; flex:none; }
+  #search { width:230px; }
+  .postab { padding:3px 10px; border-radius:20px; border:1px solid var(--line); background:none; color:var(--dim); }
+  .postab.on { color:var(--text); border-color:var(--accent); background:var(--panel2); }
+  table { width:100%; border-collapse:collapse; }
+  th { position:sticky; top:0; background:var(--panel); color:var(--dim); font-size:11px; text-transform:uppercase; letter-spacing:.05em; text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); z-index:2; }
+  td { padding:4px 8px; border-bottom:1px solid #1a212b; white-space:nowrap; }
+  tr.p { cursor:pointer; }
+  tr.p:hover { background:#202a38; }
+  tr.gone td { color:#525d6d; text-decoration:line-through; }
+  .pos { display:inline-block; width:34px; text-align:center; border-radius:4px; font-size:11px; font-weight:700; padding:1px 0; color:#0c0f13; }
+  .tier { color:var(--dim); font-size:12px; }
+  .val-good { color:var(--green); font-weight:600; }
+  .val-bad { color:var(--red); }
+  .surv { font-size:12px; color:var(--dim); }
+  .surv.hot { color:var(--red); font-weight:700; }
+
+  /* right panel */
+  h3 { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--dim); margin:12px 0 6px; }
+  .slotrow { display:flex; gap:8px; padding:2.5px 0; font-size:13px; }
+  .slotrow .lbl { width:38px; color:var(--dim); flex:none; }
+  .slotrow .empty { color:#4a5462; }
+  #feed div { padding:2px 0; font-size:12.5px; color:var(--dim); }
+  #feed b { color:var(--text); font-weight:600; }
+  #teamgrid { font-size:11.5px; width:100%; }
+  #teamgrid td { padding:1.5px 4px; border:none; color:var(--dim); }
+  #teamgrid td:first-child { color:var(--text); }
+  #teamgrid tr.me td { color:var(--green); }
+
+  /* setup overlay */
+  #setup { position:fixed; inset:0; background:rgba(8,10,14,.72); display:flex; align-items:center; justify-content:center; z-index:40; }
+  #setup.hide { display:none; }
+  #setupbox { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:22px 26px; width:430px; }
+  #setupbox h2 { margin-bottom:14px; font-size:18px; }
+  .frow { display:flex; align-items:center; gap:10px; margin:9px 0; }
+  .frow label { width:120px; color:var(--dim); flex:none; }
+  .rspec { display:flex; gap:6px; flex-wrap:wrap; }
+  .rspec span { display:flex; flex-direction:column; align-items:center; font-size:10.5px; color:var(--dim); gap:2px; }
+  .rspec input { width:40px; text-align:center; padding:3px; }
+  #startbtn { width:100%; margin-top:14px; background:var(--green); color:#03130a; font-weight:700; padding:9px; border:none; }
+  #banner { display:none; background:var(--red); color:#fff; padding:8px 14px; font-weight:600; }
+</style>
+</head>
+<body>
+<div id="banner"></div>
+<div id="top">
+  <span class="big" id="pickinfo">—</span>
+  <span id="onclock">—</span>
+  <span id="untilme"></span>
+  <span class="spacer"></span>
+  <button id="syncbtn" title="Auto-ingest picks from ESPN — tools/espn_sync.py must be running">🛰 sync OFF</button>
+  <select id="fmtsel" title="Scoring format">
+    <option value="ppr">PPR</option><option value="half">Half-PPR</option><option value="std">Standard</option>
+  </select>
+  <button id="undobtn" title="Cmd+Z">↩ Undo</button>
+  <button id="setupbtn">⚙ Setup</button>
+</div>
+
+<div id="main">
+  <div id="left">
+    <div id="recs"></div>
+    <div id="controls">
+      <input id="search" placeholder="Type name to find… (click row = drafted)" autocomplete="off">
+      <span id="postabs"></span>
+      <span class="spacer" style="flex:1"></span>
+      <button id="unlisted">Unlisted pick…</button>
+      <label style="color:var(--dim);font-size:12px"><input type="checkbox" id="showgone" style="vertical-align:-2px"> show drafted</label>
+    </div>
+    <div id="tablewrap"><table>
+      <thead><tr><th>ECR</th><th>Tier</th><th></th><th>Player</th><th>Team</th><th>Bye</th><th>ADP</th><th>ESPN#</th><th>Value</th><th>At your pick</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table></div>
+  </div>
+  <div id="right">
+    <h3>My roster</h3><div id="roster"></div>
+    <h3>Teams (QB·RB·WR·TE)</h3><table id="teamgrid"></table>
+    <h3>Last picks</h3><div id="feed"></div>
+    <button id="exportbtn" style="width:100%;margin-top:12px;font-size:12px">Copy draft state (for Claude)</button>
+    <button id="resetbtn" style="width:100%;margin-top:8px;font-size:12px;color:var(--red)">✕ New draft (clear all)</button>
+  </div>
+</div>
+
+<div id="setup" class="hide">
+  <div id="setupbox">
+    <h2>Draft setup</h2>
+    <div class="frow"><label>Teams</label><input id="s-teams" type="number" min="4" max="16" value="12"></div>
+    <div class="frow"><label>My draft slot</label><select id="s-slot"></select></div>
+    <div class="frow"><label>Scoring</label><select id="s-fmt"><option value="ppr">PPR</option><option value="half">Half-PPR</option><option value="std">Standard</option></select></div>
+    <div class="frow"><label>Roster</label><div class="rspec" id="s-roster"></div></div>
+    <div class="frow" style="color:var(--dim);font-size:12px" id="s-summary"></div>
+    <button id="startbtn">Save</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ---------- state ---------- */
+const DEFAULT_ROSTER = { QB:1, RB:2, WR:2, TE:1, FLEX:2, K:1, DST:1, BN:7 }; // GCC YG live-confirmed: 10 starters + 7 bench = 17 rounds (IR not drafted)
+const POS_ORDER = ["QB","RB","WR","TE","K","DST"];
+let DATA = null;                 // players.json payload
+let byId = new Map();            // "name|pos" -> player
+let S = {                        // persisted draft state
+  teams:12, mySlot:1, fmt:"ppr", roster:{...DEFAULT_ROSTER},
+  picks:[],                      // [{n, slot, id, name, pos}]  id null for unlisted
+  configured:true, espnSync:true,  // draft-day: preconfigured for GCC YG — slot 1, sync armed (feed via Claude)
+};
+let posFilter = "ALL";
+let toastTimer = null;
+
+const $ = (s)=>document.querySelector(s);
+const esc = (s)=>String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pid = (p)=>p.name+"|"+p.pos;
+const ecr = (p)=>p.ecr?.[S.fmt] ?? null;
+const tier = (p)=>p.tier?.[S.fmt] ?? null;
+const adp = (p)=>p.adp?.[S.fmt] ?? p.adp?.ppr ?? null;
+const sdev = (p)=>p.stdev?.[S.fmt] ?? p.stdev?.ppr ?? null;
+const adpEff = (p)=>{ const a=adp(p), e=p.espnRank; return a&&e ? (a+e)/2 : (a ?? e ?? null); }; // this room drafts off ESPN's default list — blend it into the market price
+
+/* ---------- snake math ---------- */
+const totalRounds = ()=>Object.values(S.roster).reduce((a,b)=>a+(+b||0),0);
+const totalPicks = ()=>totalRounds()*S.teams;
+function slotForPick(n){ // 1-based overall -> slot 1..teams
+  const r = Math.ceil(n/S.teams), i = (n-1)%S.teams;
+  return r%2===1 ? i+1 : S.teams-i;
+}
+const curPick = ()=>S.picks.length+1;
+const myTurn = ()=>curPick()<=totalPicks() && slotForPick(curPick())===S.mySlot;
+function myUpcoming(count){ // my next overall pick numbers
+  const out=[]; for(let n=curPick(); n<=totalPicks() && out.length<count; n++)
+    if(slotForPick(n)===S.mySlot) out.push(n);
+  return out;
+}
+
+/* ---------- survival: P(player still available at overall pick t) ---------- */
+function survival(p, t){
+  const a = adpEff(p);
+  if(a==null) return 1;                       // undrafted in mocks -> survives
+  const sigma = Math.max(2, sdev(p) ?? 0.13*a+2.5);
+  const z = (a - t + 0.5)/sigma;
+  return 1/(1+Math.exp(-1.702*z));            // logistic approx of normal CDF
+}
+function survivalCond(p, t){ // P(avail at t | still avail now) — a faller who beat his ADP shouldn't read as 2%
+  const now = survival(p, curPick());
+  return Math.min(1, survival(p, t)/Math.max(now, 1e-6));
+}
+
+/* ---------- my roster assignment ---------- */
+function assignRoster(){
+  const slots=[];
+  for(const pos of ["QB","RB","WR","TE","FLEX","K","DST","BN"])
+    for(let i=0;i<(+S.roster[pos]||0);i++) slots.push({lbl:pos+((+S.roster[pos]||0)>1?i+1:""), pos, p:null});
+  const mine = S.picks.filter(x=>x.slot===S.mySlot);
+  for(const pk of mine){
+    const pos = pk.pos||"?";
+    let slot = slots.find(s=>!s.p && s.pos===pos)
+            || (["RB","WR","TE"].includes(pos) && slots.find(s=>!s.p && s.pos==="FLEX"))
+            || slots.find(s=>!s.p && s.pos==="BN");
+    if(slot) slot.p = pk;
+  }
+  return slots;
+}
+function needMult(pos){
+  const slots = assignRoster();
+  const open = (t)=>slots.some(s=>s.pos===t && !s.p);
+  const count = (t)=>S.picks.filter(x=>x.slot===S.mySlot && x.pos===t).length;
+  const roundsLeft = totalRounds() - S.picks.filter(x=>x.slot===S.mySlot).length;
+  if(pos==="K"||pos==="DST"){
+    if(!open(pos)) return 0;            // slot already filled — or this league doesn't start one
+    return roundsLeft<=2 ? 1.0 : 0;     // hard gate: last 2 rounds only
+  }
+  if(open(pos)) return 1.0;
+  if(["RB","WR"].includes(pos)) return open("FLEX") ? 0.92 : Math.max(0.55, 0.82-0.07*(count(pos)-(+S.roster[pos]||0)));
+  if(pos==="TE") return open("FLEX") ? 0.72 : 0.3;
+  if(pos==="QB") return roundsLeft<=4 ? 0.35 : 0.15;
+  return 0.5;
+}
+
+/* ---------- recommendations ---------- */
+function availablePlayers(){
+  const gone = new Set(S.picks.map(x=>x.id).filter(Boolean));
+  return DATA.players.filter(p=>!gone.has(pid(p)));
+}
+function recommendations(){
+  if(curPick()>totalPicks()) return [];
+  const avail = availablePlayers().filter(p=>ecr(p)!=null);
+  const [m0,m1] = (()=>{ const u=myUpcoming(2); return [u[0]??null,u[1]??null]; })();
+  const turn = myTurn();
+  // tier counts among available, per pos
+  const tcount = {};
+  for(const p of avail){ const k=p.pos+"|"+tier(p); tcount[k]=(tcount[k]||0)+1; }
+  const scored = [];
+  for(const p of avail){
+    const e = ecr(p), nm = needMult(p.pos);
+    if(nm===0) continue;
+    let quality = (250-e)*nm;
+    const left = tcount[p.pos+"|"+tier(p)];
+    let tierBonus = left<=1 ? 14 : left<=2 ? 7 : 0;
+    const why = [];
+    if(left<=2 && tier(p)!=null) why.push(`<b>${left===1?"last":left+" left"} in ${p.pos} T${tier(p)}</b>`);
+    let score, survShown;
+    if(turn){
+      const sNext = m1 ? survivalCond(p,m1) : 1;
+      score = quality + tierBonus + (1-sNext)*25;
+      survShown = sNext;
+      if(sNext<0.45) why.push(`<b>${Math.round((1-sNext)*100)}% gone</b> by your next pick`);
+    } else {
+      const sMine = m0 ? survivalCond(p,m0) : 1;
+      score = (quality + tierBonus) * (0.25+0.75*sMine);
+      survShown = sMine;
+      why.push(`${Math.round(sMine*100)}% there at your pick`);
+    }
+    const ref = turn ? curPick() : m0;
+    if(ref && e < ref-5) why.push(`value: ECR ${e} at pick ${ref}`);
+    const slot = assignRoster().find(s=>!s.p && (s.pos===p.pos || (s.pos==="FLEX"&&["RB","WR","TE"].includes(p.pos))));
+    if(slot) why.push(`fills ${slot.lbl}`);
+    scored.push({p, score, why, survShown});
+  }
+  return scored.sort((a,b)=>b.score-a.score).slice(0,5);
+}
+
+/* ---------- actions ---------- */
+function draftPlayer(id, unlistedName, posHint){
+  if(curPick()>totalPicks()) return;
+  const p = id ? byId.get(id) : null;
+  S.picks.push({ n:curPick(), slot:slotForPick(curPick()), id:id||null,
+                 name:p?p.name:unlistedName, pos:p?p.pos:(posHint||"?") });
+  $("#search").value=""; persist(); render();
+  toast(`Pick ${S.picks.at(-1).n}: <b>${esc(S.picks.at(-1).name)}</b> → ${teamLabel(S.picks.at(-1).slot)}`);
+}
+function undo(){
+  if(!S.picks.length) return;
+  const x = S.picks.pop(); persist(); render();
+  toast(`Undid pick ${x.n} (${esc(x.name)})`);
+}
+function toast(html){
+  document.querySelectorAll(".toast").forEach(t=>t.remove());
+  const t = document.createElement("div"); t.className="toast";
+  t.innerHTML = html+` <button onclick="undo();this.parentElement.remove()">UNDO</button>`;
+  document.body.appendChild(t);
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.remove(), 4000);
+}
+const teamLabel = (slot)=> slot===S.mySlot ? "YOU" : "Team "+slot;
+
+/* ---------- ESPN live sync (feed written by tools/espn_sync.py) ---------- */
+async function pollEspn(){
+  if(!S.espnSync || !DATA) return;
+  try{
+    const r = await fetch("data/espn_picks.json", {cache:"no-store"});
+    if(!r.ok) return;
+    const feed = await r.json();
+    for(const fp of feed.picks || []){
+      if(fp.n !== S.picks.length + 1) continue;          // ingest strictly in draft order
+      if(S.picks.length >= totalPicks()) break;
+      const p = fp.matched ? byId.get(fp.pid) : null;
+      if(p && S.picks.some(x=>x.id===fp.pid)) break;     // already recorded manually — stop, no dupes
+      draftPlayer(p ? fp.pid : null, fp.name, fp.pos);
+    }
+  }catch(e){}
+}
+setInterval(pollEspn, 4000);
+function renderSync(){
+  const b = $("#syncbtn");
+  b.textContent = S.espnSync ? "🛰 sync ON" : "🛰 sync OFF";
+  b.style.borderColor = S.espnSync ? "var(--green)" : "";
+  b.style.color = S.espnSync ? "var(--green)" : "";
+}
+
+/* ---------- persistence ---------- */
+function persist(){
+  localStorage.setItem("ffdraft-v3", JSON.stringify(S));
+  if(location.protocol.startsWith("http")){
+    const payload = { ...S, at:new Date().toISOString(),
+      myRoster:assignRoster().map(s=>({slot:s.lbl, player:s.p?.name??null})),
+      onClock:curPick()<=totalPicks()?teamLabel(slotForPick(curPick())):"DONE",
+      pick:curPick(), round:Math.ceil(Math.min(curPick(),totalPicks())/S.teams),
+      recs:DATA?recommendations().map(r=>r.p.name):[] };
+    fetch("/state",{method:"POST",body:JSON.stringify(payload)}).catch(()=>{});
+  }
+}
+
+/* ---------- rendering ---------- */
+function render(){
+  const done = curPick()>totalPicks();
+  const r = Math.ceil(Math.min(curPick(),totalPicks())/S.teams);
+  const wr = ((Math.min(curPick(),totalPicks())-1) % S.teams) + 1; // pick within round, ESPN-style
+  $("#pickinfo").textContent = done ? "Draft complete" : `Rd ${r}/${totalRounds()} · Pick ${curPick()} (${r}.${String(wr).padStart(2,"0")})`;
+  const oc = $("#onclock");
+  if(done){ oc.textContent="🏁"; oc.classList.remove("me"); }
+  else { oc.textContent = myTurn() ? "YOU ARE ON THE CLOCK" : teamLabel(slotForPick(curPick()))+" on the clock"; oc.classList.toggle("me", myTurn()); }
+  const u = myUpcoming(1)[0];
+  $("#untilme").textContent = done||myTurn()||!u ? "" : `${u-curPick()} picks until you (#${u})`;
+  $("#fmtsel").value = S.fmt;
+
+  // recs
+  const recs = DATA ? recommendations() : [];
+  $("#recs").innerHTML = recs.map(x=>`
+    <div class="rec" data-id="${esc(pid(x.p))}">
+      <div class="nm"><span class="pos" style="background:var(--${x.p.pos})">${x.p.pos}</span> ${esc(x.p.name)}</div>
+      <div class="why">ECR ${ecr(x.p)} · T${tier(x.p)??"?"} · ${x.p.team??""} ${x.p.bye?("bye "+x.p.bye):""}</div>
+      <div class="why">${x.why.slice(0,2).join(" · ")||"&nbsp;"}</div>
+    </div>`).join("") || `<div style="color:var(--dim);padding:6px">—</div>`;
+
+  renderTable(); renderRight();
+}
+
+function renderTable(){
+  if(!DATA) return;
+  const q = $("#search").value.trim().toLowerCase();
+  const showGone = $("#showgone").checked;
+  const gone = new Set(S.picks.map(x=>x.id).filter(Boolean));
+  const m0 = myUpcoming(1)[0];
+  const rows = DATA.players
+    .filter(p=>posFilter==="ALL"||p.pos===posFilter)
+    .filter(p=>!q || p.name.toLowerCase().includes(q) || (p.team||"").toLowerCase()===q)
+    .filter(p=>showGone || !gone.has(pid(p)))
+    .sort((a,b)=>(ecr(a)??9999)-(ecr(b)??9999) || (adp(a)??999)-(adp(b)??999))
+    .slice(0,250);
+  const wrap = $("#tablewrap"), st = wrap.scrollTop;
+  $("#tbody").innerHTML = rows.map(p=>{
+    const isGone = gone.has(pid(p));
+    const e = ecr(p), a = adp(p);
+    const val = (e!=null&&a!=null) ? Math.round(a-e) : null;   // + = market drafts him later than experts rank him
+    const s = (!isGone && m0) ? survivalCond(p,m0) : null;
+    return `<tr class="p ${isGone?"gone":""}" data-id="${esc(pid(p))}">
+      <td>${e??"—"}</td><td class="tier">${tier(p)!=null?"T"+tier(p):"—"}</td>
+      <td><span class="pos" style="background:var(--${p.pos})">${p.pos}${p.posRank?.[S.fmt]??""}</span></td>
+      <td><b>${esc(p.name)}</b></td><td>${p.team??"—"}</td><td>${p.bye??"—"}</td><td>${a??"—"}</td><td>${p.espnRank??"—"}</td>
+      <td class="${val>4?"val-good":val<-9?"val-bad":""}">${val==null?"":(val>0?"+"+val:val)}</td>
+      <td class="surv ${s!=null&&s<0.4?"hot":""}">${s==null?"":Math.round(s*100)+"%"}</td>
+    </tr>`;}).join("");
+  wrap.scrollTop = st;
+}
+
+function renderRight(){
+  $("#roster").innerHTML = assignRoster().map(s=>`
+    <div class="slotrow"><span class="lbl">${s.lbl}</span>
+      ${s.p ? `<span><span class="pos" style="background:var(--${s.p.pos==="?"?"DST":s.p.pos});font-size:10px;width:28px">${s.p.pos}</span> ${esc(s.p.name)}</span>`
+            : `<span class="empty">—</span>`}</div>`).join("");
+  const counts = {};
+  for(const x of S.picks){ (counts[x.slot] ??= {QB:0,RB:0,WR:0,TE:0,K:0,DST:0,"?":0})[x.pos in {QB:1,RB:1,WR:1,TE:1,K:1,DST:1}?x.pos:"?"]++; }
+  $("#teamgrid").innerHTML = Array.from({length:S.teams},(_,i)=>{
+    const s=i+1, c=counts[s]||{QB:0,RB:0,WR:0,TE:0};
+    return `<tr class="${s===S.mySlot?"me":""}"><td>${teamLabel(s)}</td><td>${c.QB??0}·${c.RB??0}·${c.WR??0}·${c.TE??0}</td></tr>`;
+  }).join("");
+  $("#feed").innerHTML = S.picks.slice(-14).reverse().map(x=>
+    `<div>#${x.n} ${teamLabel(x.slot)}: <b>${esc(x.name)}</b> <span style="font-size:10px">${esc(x.pos)}</span></div>`).join("");
+}
+
+/* ---------- setup ---------- */
+function openSetup(){
+  $("#s-teams").value = S.teams; $("#s-fmt").value = S.fmt;
+  const slotSel = $("#s-slot");
+  slotSel.innerHTML = Array.from({length:+$("#s-teams").value},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join("");
+  slotSel.value = S.mySlot;
+  $("#s-roster").innerHTML = Object.keys(DEFAULT_ROSTER).map(k=>
+    `<span>${k}<input data-k="${k}" type="number" min="0" max="9" value="${S.roster[k]??DEFAULT_ROSTER[k]}"></span>`).join("");
+  updateSummary();
+  $("#setup").classList.remove("hide");
+}
+function updateSummary(){
+  const spec = {}; document.querySelectorAll("#s-roster input").forEach(i=>spec[i.dataset.k]=+i.value||0);
+  const rounds = Object.values(spec).reduce((a,b)=>a+b,0);
+  $("#s-summary").textContent = `${rounds} rounds × ${$("#s-teams").value} teams = ${rounds*+$("#s-teams").value} picks`;
+}
+
+/* ---------- boot ---------- */
+async function boot(){
+  try {
+    const res = await fetch("data/players.json");
+    if(!res.ok) throw new Error(res.status);
+    DATA = await res.json();
+    DATA.players.forEach(p=>byId.set(pid(p),p));
+    const b=$("#banner");
+    b.style.display="block"; b.style.background="var(--panel2)";
+    b.innerHTML=`Data: ${DATA.players.length} players · fetched ${DATA.fetched_at?.slice(0,16).replace("T"," ")} UTC · FP updated ${DATA.fp_updated?.ppr??"?"}`;
+    setTimeout(()=>b.style.display="none", 6000);
+  } catch(e){
+    $("#banner").style.display="block";
+    $("#banner").textContent = "Could not load data/players.json — run:  python3 tools/serve.py  and open http://localhost:8712/draft.html (after python3 tools/fetch_data.py)";
+  }
+  const saved = localStorage.getItem("ffdraft-v3");
+  if(saved){ try{ S = {...S, ...JSON.parse(saved)}; }catch(e){} }
+  if(!S.configured) openSetup();
+
+  const posTabs = ["ALL",...POS_ORDER];
+  $("#postabs").innerHTML = posTabs.map(t=>`<button class="postab ${t===posFilter?"on":""}" data-pos="${t}">${t}</button>`).join("");
+
+  /* events */
+  $("#postabs").addEventListener("click",e=>{ const b=e.target.closest(".postab"); if(!b) return;
+    posFilter=b.dataset.pos; document.querySelectorAll(".postab").forEach(x=>x.classList.toggle("on",x===b)); renderTable(); });
+  $("#tbody").addEventListener("click",e=>{ const tr=e.target.closest("tr.p"); if(!tr||tr.classList.contains("gone")) return; draftPlayer(tr.dataset.id); });
+  $("#recs").addEventListener("click",e=>{ const c=e.target.closest(".rec"); if(c) draftPlayer(c.dataset.id); });
+  $("#search").addEventListener("input",renderTable);
+  $("#showgone").addEventListener("change",renderTable);
+  $("#fmtsel").addEventListener("change",e=>{ S.fmt=e.target.value; persist(); render(); });
+  $("#undobtn").onclick=undo;
+  $("#setupbtn").onclick=openSetup;
+  $("#syncbtn").onclick=()=>{ S.espnSync=!S.espnSync; persist(); renderSync(); if(S.espnSync) pollEspn(); };
+  renderSync();
+  $("#unlisted").onclick=()=>{ const n=prompt("Player name (not in database):"); if(n) draftPlayer(null,n.trim()); };
+  $("#exportbtn").onclick=()=>{ navigator.clipboard.writeText(localStorage.getItem("ffdraft-v3")||"{}"); toast("State copied — paste to Claude"); };
+  $("#resetbtn").onclick=()=>{ if(confirm("Clear the whole draft?")){ S.picks=[]; persist(); render(); } };
+  document.addEventListener("keydown",e=>{
+    const typing = ["INPUT","SELECT","TEXTAREA"].includes(document.activeElement?.tagName);
+    if((e.metaKey||e.ctrlKey)&&e.key==="z"){ if(typing) return; e.preventDefault(); undo(); }
+    else if(e.key==="Escape"){ $("#search").value=""; renderTable(); }
+    else if(e.key.length===1 && !e.metaKey && !e.ctrlKey && document.activeElement.tagName!=="INPUT"){ $("#search").focus(); }
+  });
+  $("#s-teams").addEventListener("input",()=>{ const n=+$("#s-teams").value||12, cur=+$("#s-slot").value||S.mySlot;
+    $("#s-slot").innerHTML=Array.from({length:n},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join("");
+    $("#s-slot").value=Math.min(cur,n); updateSummary(); });
+  $("#s-roster").addEventListener("input",updateSummary);
+  $("#startbtn").onclick=()=>{
+    S.teams=+$("#s-teams").value||12; S.mySlot=Math.min(+$("#s-slot").value||1, S.teams); S.fmt=$("#s-fmt").value;
+    document.querySelectorAll("#s-roster input").forEach(i=>S.roster[i.dataset.k]=+i.value||0);
+    S.configured=true; $("#setup").classList.add("hide"); persist(); render();
+  };
+  render();
+}
+boot();
+</script>
+</body>
+</html>

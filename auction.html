@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GCCFFL Auction Board</title>
+<style>
+  :root {
+    --bg:#0e1116; --panel:#161b23; --panel2:#1c232e; --line:#2a3341;
+    --text:#e6ebf2; --dim:#8b97a8; --accent:#4da3ff; --green:#3ddc84; --red:#ff5d5d; --gold:#e8c14f;
+    --QB:#e0656b; --RB:#4fd08a; --WR:#5aa2e8; --TE:#e8a04f; --K:#b07ce8; --DST:#9aa5b1;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--bg); color:var(--text); font:14px/1.45 -apple-system, "SF Pro Text", Segoe UI, Roboto, sans-serif; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
+  button { font:inherit; color:inherit; background:var(--panel2); border:1px solid var(--line); border-radius:6px; padding:4px 10px; cursor:pointer; }
+  button:hover { border-color:var(--accent); }
+  input, select, textarea { font:inherit; color:var(--text); background:var(--panel2); border:1px solid var(--line); border-radius:6px; padding:4px 8px; }
+  input:focus, select:focus, textarea:focus { outline:none; border-color:var(--accent); }
+
+  /* top bar */
+  #top { display:flex; align-items:center; gap:10px; padding:8px 14px; background:var(--panel); border-bottom:1px solid var(--line); flex:none; flex-wrap:wrap; }
+  #top .big { font-size:16px; font-weight:700; }
+  .chip { padding:3px 10px; border-radius:6px; background:var(--panel2); font-size:12.5px; white-space:nowrap; }
+  #mychip { border:1px solid var(--green); }
+  #top .spacer { flex:1; }
+  .toast { position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:var(--panel2); border:1px solid var(--accent); border-radius:8px; padding:8px 14px; z-index:60; display:flex; gap:12px; align-items:center; max-width:92vw; }
+
+  /* layout */
+  #main { display:flex; flex:1; min-height:0; }
+  #left { flex:1; display:flex; flex-direction:column; min-width:0; }
+  #right { width:305px; flex:none; border-left:1px solid var(--line); background:var(--panel); overflow-y:auto; padding:10px; }
+
+  /* recommendations */
+  #recs { display:flex; gap:14px; padding:8px 14px; overflow-x:auto; flex:none; background:linear-gradient(180deg, var(--panel), var(--bg)); }
+  .recgroup { display:flex; gap:8px; align-items:stretch; }
+  .rghead { writing-mode:vertical-rl; transform:rotate(180deg); text-align:center; font-size:10px; letter-spacing:.12em; color:var(--dim); text-transform:uppercase; flex:none; }
+  .rec { min-width:148px; background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:7px 9px; cursor:pointer; }
+  .rec:hover { border-color:var(--green); }
+  .rec .nm { font-weight:700; white-space:nowrap; font-size:13px; }
+  .rec .why { color:var(--dim); font-size:11px; margin-top:2px; white-space:nowrap; }
+  .rec .why b { color:var(--text); font-weight:600; }
+  .recgroup.buy .rec:first-child { border-color:var(--green); box-shadow:0 0 0 1px var(--green) inset; }
+  /* NOT sticky: a pinned group with a background silently covers the Buy cards behind it.
+     Both groups just have to fit — 4 buys + 3 noms does at laptop widths. */
+  .recgroup.nom { padding-left:10px; border-left:1px solid var(--line); }
+  .recgroup.nom .rghead { color:var(--gold); }
+  .recgroup.nom .rec { border-style:dashed; border-color:#4a4326; min-width:136px; }
+  .recgroup.nom .rec:hover { border-color:var(--gold); }
+
+  /* table */
+  #tablewrap { flex:1; overflow-y:auto; }
+  #controls { display:flex; gap:8px; padding:6px 14px; align-items:center; flex:none; flex-wrap:wrap; }
+  #search { width:230px; }
+  .postab { padding:3px 10px; border-radius:20px; border:1px solid var(--line); background:none; color:var(--dim); }
+  .postab.on { color:var(--text); border-color:var(--accent); background:var(--panel2); }
+  table { width:100%; border-collapse:collapse; }
+  th { position:sticky; top:0; background:var(--panel); color:var(--dim); font-size:11px; text-transform:uppercase; letter-spacing:.05em; text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); z-index:2; }
+  td { padding:4px 8px; border-bottom:1px solid #1a212b; white-space:nowrap; }
+  tr.p { cursor:pointer; }
+  tr.p:hover { background:#202a38; }
+  tr.gone td { color:#525d6d; text-decoration:line-through; }
+  .pos { display:inline-block; width:34px; text-align:center; border-radius:4px; font-size:11px; font-weight:700; padding:1px 0; color:#0c0f13; }
+  .tier { color:var(--dim); font-size:12px; }
+  .money { font-weight:600; }
+  .val-good { color:var(--green); font-weight:600; }
+  .val-bad { color:var(--red); }
+
+  /* right panel */
+  h3 { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--dim); margin:12px 0 6px; }
+  .slotrow { display:flex; gap:8px; padding:2.5px 0; font-size:13px; }
+  .slotrow .lbl { width:42px; color:var(--dim); flex:none; }
+  .slotrow .empty { color:#4a5462; }
+  .slotrow .pr { margin-left:auto; color:var(--dim); }
+  #feed div { padding:2px 0; font-size:12.5px; color:var(--dim); cursor:pointer; border-radius:4px; }
+  #feed div:hover { background:var(--panel2); color:var(--text); }
+  #feed b { color:var(--text); font-weight:600; }
+  #teamgrid { font-size:11.5px; width:100%; }
+  #teamgrid td { padding:1.5px 4px; border:none; color:var(--dim); }
+  #teamgrid td:nth-child(2) { color:var(--text); }
+  #teamgrid tr.me td { color:var(--green); }
+  #teamgrid tr.broke td { color:#5a6474; }
+  #teamgrid th { position:static; font-size:10px; padding:2px 4px; }
+
+  /* modals */
+  .modal { position:fixed; inset:0; background:rgba(8,10,14,.72); display:flex; align-items:center; justify-content:center; z-index:40; }
+  .modal.hide { display:none; }
+  .mbox { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:20px 24px; width:460px; max-width:96vw; max-height:92vh; overflow-y:auto; }
+  .mbox h2 { margin-bottom:12px; font-size:17px; }
+  .frow { display:flex; align-items:center; gap:10px; margin:9px 0; }
+  .frow label { width:120px; color:var(--dim); flex:none; }
+  .rspec { display:flex; gap:6px; flex-wrap:wrap; }
+  .rspec span { display:flex; flex-direction:column; align-items:center; font-size:10.5px; color:var(--dim); gap:2px; }
+  .rspec input { width:40px; text-align:center; padding:3px; }
+  .primarybtn { width:100%; margin-top:14px; background:var(--green); color:#03130a; font-weight:700; padding:9px; border:none; }
+  #banner { display:none; background:var(--red); color:#fff; padding:8px 14px; font-weight:600; }
+
+  /* sale card */
+  #sc-head { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+  #sc-head .nm { font-size:19px; font-weight:800; }
+  #sc-head .meta { color:var(--dim); }
+  #sc-money { display:flex; gap:16px; margin:10px 0 4px; font-size:15px; }
+  #sc-money b { font-size:17px; }
+  #sc-money .mymax b { color:var(--green); }
+  #sc-notes { color:var(--dim); font-size:12.5px; min-height:18px; margin-bottom:8px; }
+  #sc-news { font-size:12.5px; line-height:1.4; margin:4px 0 6px; padding:6px 8px; border-radius:6px;
+             background:var(--panel2); border-left:3px solid var(--dim); color:var(--text); }
+  .news { font-weight:700; margin-right:4px; }
+  .news.discount { color:var(--red); } .news.opportunity { color:var(--green); }
+  .news.monitor { color:var(--gold); } .news.avoid { color:var(--red); }
+  td .newsdot { font-size:11px; margin-left:3px; }
+  #sc-notes b { color:var(--text); }
+  .eagle { color:var(--gold); font-weight:700; }
+  #sc-inputs { display:flex; gap:10px; align-items:center; margin:10px 0 4px; }
+  #sc-price { width:90px; font-size:17px; font-weight:700; text-align:center; }
+  #sc-buyer { width:120px; }
+  #sc-resolve { color:var(--dim); font-size:12.5px; flex:1; }
+  #teambtns { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-top:10px; }
+  .tbtn { font-size:12px; padding:7px 2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .tbtn small { color:var(--dim); }
+  .tbtn.me { border-color:var(--green); }
+  #sc-actions { display:flex; gap:10px; margin-top:14px; }
+  #sc-commit { flex:1; background:var(--green); color:#03130a; font-weight:700; border:none; padding:9px; }
+  #sc-delete { color:var(--red); display:none; }
+
+  /* nominate modal */
+  .nomplan { background:var(--panel2); border-left:3px solid var(--gold); border-radius:6px;
+             padding:8px 10px; font-size:13px; margin-bottom:10px; }
+  .nomrow { display:flex; align-items:center; gap:7px; padding:7px 6px; border-bottom:1px solid #1a212b;
+            cursor:pointer; border-radius:6px; font-size:13px; }
+  .nomrow:hover { background:var(--panel2); }
+  .nomrow .rank { color:var(--dim); width:14px; font-size:11px; flex:none; }
+  .nomrow .why { margin-left:auto; color:var(--dim); font-size:11.5px; text-align:right; }
+  .nomrow .why b { color:var(--text); }
+
+  /* import */
+  #im-text { width:100%; height:130px; font:12.5px ui-monospace, Menlo, monospace; }
+  #im-preview { margin-top:10px; max-height:250px; overflow-y:auto; font-size:12.5px; }
+  #im-preview .row { display:flex; gap:8px; padding:2px 0; border-bottom:1px solid #1a212b; }
+  #im-preview .ok { color:var(--green); } #im-preview .bad { color:var(--red); } #im-preview .amb { color:var(--gold); }
+
+  /* team-name grid in setup */
+  #s-teams { display:grid; grid-template-columns:1fr 1fr; gap:5px; }
+  #s-teams .trow { display:flex; align-items:center; gap:3px; }
+  #s-teams .trow b { color:var(--dim); font-size:10px; width:14px; flex:none; text-align:right; }
+  #s-teams input { width:100%; min-width:0; font-size:12.5px; padding:3px 6px; }
+  .delteam { padding:2px 5px; font-size:11px; color:var(--dim); border-color:transparent; background:none; flex:none; }
+  .delteam:hover { color:var(--red); border-color:var(--red); }
+
+  /* phone */
+  @media (max-width:700px){
+    body { overflow:auto; height:auto; }
+    #main { flex-direction:column; }
+    #tablewrap { max-height:52vh; }
+    #right { width:auto; border-left:none; border-top:1px solid var(--line); }
+    .mb { display:none; }
+    #search { width:150px; }
+    .mbox { width:100vw; max-height:100vh; border-radius:0; }
+    .tbtn { padding:12px 2px; font-size:13px; }
+    #recs .rec { min-width:132px; }
+  }
+</style>
+</head>
+<body>
+<div id="banner"></div>
+<div id="top">
+  <span class="big">GCCFFL 🔨</span>
+  <span class="chip" id="heatchip">—</span>
+  <span class="chip" id="inflchip">—</span>
+  <span class="chip" id="mychip">—</span>
+  <span class="chip" id="rivalchip">—</span>
+  <span class="spacer"></span>
+  <button id="nomsbtn" title="It's my turn to nominate — who do I put up?" style="border-color:var(--gold);color:var(--gold)">🎤 My nomination</button>
+  <button id="catchupbtn" title="Bulk-enter sales you missed">⏱ Catch up</button>
+  <select id="fmtsel" title="Scoring format — GCCFFL is 0.6/reception per the Yahoo settings export">
+    <option value="gcc">GCCFFL 0.6</option><option value="half">Half-PPR</option><option value="ppr">PPR</option><option value="std">Standard</option>
+  </select>
+  <button id="undobtn" title="Cmd+Z">↩ Undo</button>
+  <button id="setupbtn">⚙ Setup</button>
+</div>
+
+<div id="main">
+  <div id="left">
+    <div id="recs"></div>
+    <div id="controls">
+      <input id="search" placeholder="Nominated? Type name, Enter = open… " autocomplete="off">
+      <span id="postabs"></span>
+      <span class="spacer" style="flex:1"></span>
+      <button id="unlisted">Unlisted player…</button>
+      <label style="color:var(--dim);font-size:12px"><input type="checkbox" id="showgone" style="vertical-align:-2px"> show sold</label>
+    </div>
+    <div id="tablewrap"><table>
+      <thead><tr><th>Base$</th><th>Now$</th><th>Δ$</th><th></th><th>Player</th><th class="mb">Team</th><th class="mb">Bye</th><th>ECR</th><th>Tier</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table></div>
+  </div>
+  <div id="right">
+    <h3>My roster — <span id="mybudget"></span></h3><div id="roster"></div>
+    <h3>Teams ($ left · max · open)</h3><table id="teamgrid"></table>
+    <h3>Last sales — click to fix</h3><div id="feed"></div>
+    <button id="exportbtn" style="width:100%;margin-top:12px;font-size:12px">Copy auction state (for Claude / other device)</button>
+    <button id="resetbtn" style="width:100%;margin-top:8px;font-size:12px;color:var(--red)">✕ New auction (clear all sales)</button>
+  </div>
+</div>
+
+<!-- sale card -->
+<div id="salecard" class="modal hide">
+  <div class="mbox">
+    <div id="sc-head"></div>
+    <div id="sc-money"></div>
+    <div id="sc-news"></div>
+    <div id="sc-notes"></div>
+    <div id="sc-inputs">
+      <label style="color:var(--dim)">$</label><input id="sc-price" inputmode="numeric" pattern="[0-9]*" placeholder="price">
+      <input id="sc-buyer" placeholder="buyer: 1-16 / name / m / u">
+      <span id="sc-resolve"></span>
+    </div>
+    <div id="teambtns"></div>
+    <div id="sc-actions">
+      <button id="sc-commit">SOLD ✓</button>
+      <button id="sc-delete">Delete sale</button>
+      <button id="sc-cancel" title="Esc">Not sold</button>
+    </div>
+  </div>
+</div>
+
+<!-- my turn to nominate -->
+<div id="nomsmodal" class="modal hide">
+  <div class="mbox">
+    <h2>🎤 Your nomination</h2>
+    <div id="nom-strategy"></div>
+    <div id="nom-list"></div>
+    <button id="nom-close" class="primarybtn" style="background:var(--panel2);color:var(--text)">Close</button>
+  </div>
+</div>
+
+<!-- catch-up import -->
+<div id="importmodal" class="modal hide">
+  <div class="mbox">
+    <h2>Catch up — bulk enter sales</h2>
+    <div style="color:var(--dim);font-size:12.5px;margin-bottom:8px">
+      One sale per line: <b style="color:var(--text)">player price [buyer]</b> — buyer = team # or name, blank = Unknown.<br>
+      e.g. <code>chase 91 dana</code> · <code>bijan 88 3</code> · <code>saquon 70</code><br>
+      (Or paste a copied auction state JSON to restore it wholesale.)
+    </div>
+    <textarea id="im-text" placeholder="jamarr chase 91 dana&#10;bijan 88 3&#10;saquon 70"></textarea>
+    <div id="im-preview"></div>
+    <div style="display:flex;gap:10px;margin-top:12px">
+      <button id="im-apply" class="primarybtn" style="margin-top:0">Apply</button>
+      <button id="im-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- setup -->
+<div id="setup" class="modal hide">
+  <div class="mbox">
+    <h2>Auction setup</h2>
+    <div class="frow"><label>Budget / team</label><input id="s-budget" type="number" min="1" value="200" style="width:80px"></div>
+    <div class="frow"><label>My team</label><select id="s-me"></select></div>
+    <div class="frow"><label>Slots I'll leave empty</label><input id="s-empty" type="number" min="0" max="11" value="0" style="width:60px" title="Raises your max bid: you plan to leave this many roster spots unfilled (fill via $150 FA later)"></div>
+    <div class="frow"><label>Roster</label><div class="rspec" id="s-roster"></div></div>
+    <div class="frow" style="color:var(--dim);font-size:12px" id="s-summary"></div>
+    <div class="frow" style="align-items:flex-start"><label>Teams</label><div id="s-teams" style="flex:1"></div></div>
+    <button id="startbtn" class="primarybtn">Save</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ---------- state ---------- */
+// The league email listed 16 GMs; 15 are actually drafting. The last one listed is dropped as the
+// placeholder — if a DIFFERENT team is the missing one, just rename/✕ in ⚙ Setup, it takes 5 seconds.
+const DEFAULT_TEAMS = ["Dana","Cole","Ari/Ivan","Drew","Paul","Jack","Sean","P.Evan",
+                       "Jon R.","Perry","Miles","Carl","Ellis","Kim","Sam/Ethan"];  // placeholder names; rename in ⚙ Setup
+const DEFAULT_ROSTER = { QB:1, RB:1, WR:1, TE:1, WT:2, WRT:1, K:1, DST:1, BN:3 }; // 12 spots — GCCFFL 2026 rules email
+const POS_ORDER = ["QB","RB","WR","TE","K","DST"];
+// family tilt, buy-side only — the $ values themselves stay market-honest.
+// likes: Eagles, Steelers. won't own: Patriots, Cowboys (both become nomination bait instead).
+const PREF = { PHI:1.15, PIT:1.15, NE:0.5, DAL:0.5 };
+const PREF_CEIL = { PHI:1.12, PIT:1.12, NE:0.7, DAL:0.7 };   // WE pay a bit over for PHI/PIT (room probably won't — league intel), under for NE/DAL
+const NOM_BOOST = { DAL:1.35, NE:1.2, PHI:0.8, PIT:0.8 };    // put up Cowboys/Patriots early; never bid up our own guys
+const prefMult = (p)=>PREF[p.team] ?? 1;
+const NEWS_ICON = { avoid:"⛔", discount:"⚠", monitor:"•", opportunity:"💡" };
+const bidCeil = (p)=>Math.min(myMax(), Math.max(1, Math.round(now$(p) * (PREF_CEIL[p.team] ?? 1))));
+const teamTag = (p)=>p.team==="PHI"?" 🦅":p.team==="PIT"?" 🟡":(p.team==="NE"||p.team==="DAL")?" 🚫":"";
+let DATA = null;
+let byId = new Map();
+let S = {                                  // persisted auction state
+  v:2,                                     // schema/config version: stale saved config is discarded on mismatch, sales kept
+  teams:[...DEFAULT_TEAMS], me:14,         // Sam/Ethan
+  budget:200, fmt:"gcc", leaveEmpty:0,     // 0.6 PPR — Yahoo settings export
+  roster:{...DEFAULT_ROSTER},
+  sales:[],                                // [{id,name,pos,price,buyer}] buyer: 0-based idx | null = Unknown
+  configured:true,                         // preconfigured for GCCFFL draft day
+};
+let NOTES = window.INLINE_NOTES || {};     // injury/news flags shown on cards + table (data/notes.json)
+let posFilter = "ALL";
+let toastTimer = null;
+let UNDO_STACK = [];                       // S.sales snapshots taken BEFORE each mutation — undo reverts the actual action
+let C = null;                              // derived money math, rebuilt by calc()
+let saleCtx = null;                        // {id,name,pos, editIdx|null} while sale card open
+
+const $ = (s)=>document.querySelector(s);
+const esc = (s)=>String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pid = (p)=>p.name+"|"+p.pos;
+const ecr = (p)=>p.ecr?.[S.fmt] ?? null;
+const tier = (p)=>p.tier?.[S.fmt] ?? null;
+const inPool = (p)=>!!p.auction;                       // fetcher writes auction{} only for the 192-player draftable pool
+const base = (p)=>p.auction ? (p.auction[S.fmt] ?? 1) : 1;
+const spots = ()=>Object.values(S.roster).reduce((a,b)=>a+(+b||0),0);
+const fmtMoney = (n)=>"$"+n;
+
+/* ---------- money math ---------- */
+function calc(){
+  const teams = S.teams.map(name=>({name, spent:0, bought:0}));
+  let unkCash=0, unkCount=0;
+  for(const s of S.sales){
+    if(s.buyer==null){ unkCash+=s.price; unkCount++; }
+    else if(teams[s.buyer]){ teams[s.buyer].spent+=s.price; teams[s.buyer].bought++; }
+  }
+  for(const t of teams){
+    t.remaining = S.budget - t.spent;
+    t.open = Math.max(0, spots() - t.bought);
+    t.max = t.remaining - Math.max(0, t.open - 1);
+  }
+  const me = teams[S.me];
+  if(me) me.max = me.remaining - Math.max(0, me.open - 1 - (+S.leaveEmpty||0));
+  const remainingCash = S.teams.length*S.budget - S.sales.reduce((a,s)=>a+s.price,0);
+  const openLeague = S.teams.length*spots() - S.sales.length;
+  const gone = new Set(S.sales.map(s=>s.id).filter(Boolean));
+  let poolVal=0, poolCnt=0;
+  if(DATA) for(const p of DATA.players) if(inPool(p) && !gone.has(pid(p))){ poolVal+=base(p); poolCnt++; }
+  // discretionary cash over discretionary sheet value; ≈1.0 at the start by construction
+  const infl = Math.min(4, Math.max(0.25, (remainingCash - openLeague) / Math.max(1, poolVal - poolCnt)));
+  // HEAT = backward-looking: what the room has actually paid vs sheet value of what's been sold.
+  // Distinct from infl (forward-looking). Hot room -> pay up to win now, but money drains -> late bargains.
+  let paid=0, sheetVal=0;
+  for(const s of S.sales){
+    const p = s.id ? byId.get(s.id) : null;
+    if(p && inPool(p)){ paid += s.price; sheetVal += base(p); }
+  }
+  const heat = sheetVal >= 25 ? paid/sheetVal : null;   // needs a few real sales before it means anything
+  const meT = teams[S.me];
+  const rivals = teams.filter((t,i)=>i!==S.me && t.open>0 && t.max >= (meT?.max ?? 0)).length;
+  const broke  = teams.filter((t,i)=>i!==S.me && (t.open===0 || t.max < 10)).length;
+  C = { teams, unkCash, unkCount, remainingCash, openLeague, poolVal, poolCnt, infl, heat, paid, sheetVal, rivals, broke };
+  return C;
+}
+const now$ = (p)=>Math.max(1, Math.round(1 + (base(p)-1) * C.infl));
+const myMax = ()=>C.teams[S.me]?.max ?? 0;
+
+/* ---------- my roster ---------- */
+function assignRoster(){
+  const slots=[];
+  for(const pos of ["QB","RB","WR","TE","WT","WRT","K","DST","BN"])
+    for(let i=0;i<(+S.roster[pos]||0);i++) slots.push({lbl:pos+((+S.roster[pos]||0)>1?i+1:""), pos, p:null});
+  const mine = S.sales.filter(s=>s.buyer===S.me);
+  for(const sale of mine){
+    const pos = sale.pos||"?";
+    const slot = slots.find(s=>!s.p && s.pos===pos)
+             || (["WR","TE"].includes(pos) && slots.find(s=>!s.p && s.pos==="WT"))
+             || (["RB","WR","TE"].includes(pos) && slots.find(s=>!s.p && s.pos==="WRT"))
+             || slots.find(s=>!s.p && s.pos==="BN");
+    if(slot) slot.p = sale;
+  }
+  return slots;
+}
+function needMult(pos){
+  const slots = assignRoster();
+  const open = (t)=>slots.some(s=>!s.p && s.pos===t);
+  if(pos==="K"||pos==="DST"){
+    if(!open(pos)) return 0;
+    return slots.filter(s=>s.pos!=="K"&&s.pos!=="DST").every(s=>s.p) ? 1 : 0;  // wait until skill slots done
+  }
+  if(open(pos)) return 1.0;
+  if(["WR","TE"].includes(pos) && open("WT")) return 0.95;
+  if(["RB","WR","TE"].includes(pos) && open("WRT")) return 0.9;
+  if(open("BN")) return 0.45;
+  return 0;
+}
+function fillsSlot(pos){
+  const slots = assignRoster();
+  const s = slots.find(x=>!x.p && (x.pos===pos
+        || (x.pos==="WT"&&["WR","TE"].includes(pos))
+        || (x.pos==="WRT"&&["RB","WR","TE"].includes(pos))
+        || x.pos==="BN"));
+  return s ? s.lbl : null;
+}
+
+/* ---------- recommendations ---------- */
+function availablePlayers(){
+  const gone = new Set(S.sales.map(s=>s.id).filter(Boolean));
+  return DATA.players.filter(p=>!gone.has(pid(p)));
+}
+function recommendations(){
+  const avail = availablePlayers();
+  const tcount = {};
+  for(const p of avail){ const k=p.pos+"|"+tier(p); tcount[k]=(tcount[k]||0)+1; }
+  const endgame = myMax() < 15;
+  const buys=[];
+  for(const p of avail){
+    if(!inPool(p)) continue;
+    const b = base(p), n = now$(p), nm = needMult(p.pos);
+    if(nm<=0) continue;
+    if(endgame ? n>myMax() : b<10) continue;
+    const left = tcount[p.pos+"|"+tier(p)];
+    const tierMult = left<=1 ? 1.3 : left<=2 ? 1.15 : 1;
+    // early: best player for my needs; later: discount (base−now) amplified; dad-team tilt on top
+    const score = (b + 2*Math.max(0, b-n)) * nm * tierMult * prefMult(p);
+    const why = [`<b>${fmtMoney(n)} now</b> (base ${fmtMoney(b)})`];
+    if(left<=2 && tier(p)!=null) why.push(`<b>${left===1?"last":"2 left"} in ${p.pos} T${tier(p)}</b>`);
+    if(p.team==="PHI"||p.team==="PIT") why.push(`<span class="eagle">❤️ dad team</span>`);
+    else if(p.team==="NE"||p.team==="DAL") why.push("🚫 "+(p.team==="DAL"?"Cowboy":"Patriot"));
+    const fs = fillsSlot(p.pos); if(fs) why.push("fills "+fs);
+    buys.push({p, score, why});
+  }
+  buys.sort((a,b)=>b.score-a.score);
+  // nominate = price enforcers: big-money players who are NOT my targets (Eagles boosted — the room overpays them)
+  const targets = new Set(buys.slice(0,8).map(x=>pid(x.p)));
+  const noms=[];
+  for(const p of avail){
+    if(!inPool(p)) continue;
+    const b = base(p), n = now$(p), nm = needMult(p.pos);
+    if(endgame){
+      if(nm>0 && n<=myMax()) noms.push({p, score:b, why:[`<b>${fmtMoney(n)}</b> — I can win this`]});
+      continue;
+    }
+    if(targets.has(pid(p)) || n<3) continue;
+    // Cowboys/Patriots = perfect bait, we'd never own them. PHI/PIT damped: WE pay the premium there,
+    // so don't put our own targets up while the room is cash-rich.
+    const score = n * (NOM_BOOST[p.team] ?? 1) * ((nm===0||n>myMax()) ? 1.15 : 1);
+    const why = [`drains ~<b>${fmtMoney(n)}</b>`];
+    if(p.team==="DAL") why.push("🚫 Cowboy — never buying him");
+    else if(p.team==="NE") why.push("🚫 never buying him anyway");
+    else if(nm===0) why.push("not my need");
+    else if(n>myMax()) why.push("above my max");
+    noms.push({p, score, why});
+  }
+  noms.sort((a,b)=>b.score-a.score);
+  return { buys:buys.slice(0,5), noms:noms.slice(0,8), endgame };
+}
+
+/* ---------- buyer resolution ---------- */
+function resolveBuyer(str){ // -> {buyer: idx | null(unknown) | undefined(unresolved), label}
+  const t=(str||"").trim().toLowerCase();
+  if(!t || t==="u" || t==="?") return {buyer:null, label:"→ ❓ Unknown"};
+  if(t==="m" || t==="me") return {buyer:S.me, label:"→ ME ("+esc(S.teams[S.me])+")"};
+  if(/^\d+$/.test(t)){
+    const n=+t;
+    if(n>=1 && n<=S.teams.length) return {buyer:n-1, label:`→ #${n} ${esc(S.teams[n-1])}`};
+    return {buyer:undefined, label:"no team #"+n};
+  }
+  // match on NAME TOKENS, not whole names: "ethan" must hit both "Sam/Ethan" and "Ethan Z"
+  // and come back ambiguous, never silently resolve to the rival.
+  const lc = S.teams.map((nm,i)=>[nm.toLowerCase(), nm.toLowerCase().split(/[^a-z]+/).filter(Boolean), i]);
+  const found = (hits)=>({buyer:hits[0][2], label:`→ #${hits[0][2]+1} ${esc(S.teams[hits[0][2]])}`});
+  const ambig = (hits)=>({buyer:undefined, label:"ambiguous: "+hits.map(h=>`${h[2]+1}=${esc(S.teams[h[2]])}`).join(" / ")});
+  let hits = lc.filter(([,tk])=>tk.some(w=>w.startsWith(t)));
+  if(hits.length===1) return found(hits);
+  if(hits.length>1) return ambig(hits);
+  hits = lc.filter(([nm])=>nm.includes(t));
+  if(hits.length===1) return found(hits);
+  if(hits.length>1) return ambig(hits);
+  return {buyer:undefined, label:"no match"};
+}
+
+/* ---------- sale card ---------- */
+function openSale(id, unlistedName, posHint, editIdx=null){
+  const p = id ? byId.get(id) : null;
+  if(!p && !unlistedName && editIdx==null) return;
+  saleCtx = { id: id||null,
+              name: p ? p.name : unlistedName,
+              pos: p ? p.pos : (posHint||"?"),
+              editIdx };
+  const nmHtml = `<span class="pos" style="background:var(--${saleCtx.pos in {QB:1,RB:1,WR:1,TE:1,K:1,DST:1}?saleCtx.pos:"DST"})">${esc(saleCtx.pos)}</span>
+                  <span class="nm">${esc(saleCtx.name)}</span>
+                  <span class="meta">${p ? esc(p.team??"")+(p.bye?(" · bye "+p.bye):"") : "unlisted"}</span>
+                  ${p && p.team==="PHI" ? '<span class="eagle">🦅 EAGLE — dad likes, ok a bit over</span>'
+                   : p && p.team==="PIT" ? '<span class="eagle">🟡 STEELER — dad likes, ok a bit over</span>'
+                   : p && p.team==="NE" ? '<span style="color:var(--red);font-weight:700">🚫 PATRIOT — we pass</span>'
+                   : p && p.team==="DAL" ? '<span style="color:var(--red);font-weight:700">🚫 COWBOY — we pass, nominate him instead</span>' : ""}`;
+  $("#sc-head").innerHTML = nmHtml;
+  if(p && inPool(p)){
+    $("#sc-money").innerHTML = `<span>Base <b>${fmtMoney(base(p))}</b></span>
+      <span>Now <b>${fmtMoney(now$(p))}</b></span>
+      <span>Bid to <b>${fmtMoney(bidCeil(p))}</b></span>
+      <span class="mymax">My max <b>${fmtMoney(myMax())}</b></span>`;
+  } else {
+    $("#sc-money").innerHTML = `<span>Base <b>$1</b></span><span class="mymax">My max <b>${fmtMoney(myMax())}</b></span>`;
+  }
+  const nt = p ? NOTES[p.name] : null;
+  $("#sc-news").innerHTML = nt
+    ? `<span class="news ${esc(nt.action)}">${NEWS_ICON[nt.action]||"•"} ${esc(nt.action.toUpperCase())}</span> ${esc(nt.note)}`
+    : "";
+  $("#sc-news").style.display = nt ? "" : "none";
+  const notes=[];
+  const nm = p ? needMult(p.pos) : 0;
+  const fs = p ? fillsSlot(p.pos) : null;
+  if(p){
+    if(nm===0) notes.push(p.pos==="K"||p.pos==="DST" ? "⚠ K/DST — wait until skill slots are done" : "⚠ no roster room");
+    else if(fs) notes.push(`fills <b>${fs}</b>`);
+    const left = availablePlayers().filter(x=>x.pos===p.pos && tier(x)===tier(p)).length;
+    if(tier(p)!=null && left<=3) notes.push(`<b>${left} left</b> in ${p.pos} T${tier(p)}`);
+    const rivals = C.teams.map((t,i)=>({...t,i})).filter(t=>t.i!==S.me && t.open>0 && t.max>=myMax()).sort((a,b)=>b.max-a.max);
+    if(rivals.length) notes.push("can outbid me: "+rivals.slice(0,3).map(t=>`${esc(t.name)} (${fmtMoney(t.max)})`).join(", ")+(rivals.length>3?` +${rivals.length-3}`:""));
+    else notes.push("<b>nobody can outbid me</b>");
+  }
+  $("#sc-notes").innerHTML = notes.join(" · ");
+  // team buttons: tap = pick buyer + commit
+  $("#teambtns").innerHTML = S.teams.map((nm,i)=>{
+    const t=C.teams[i];
+    return `<button class="tbtn ${i===S.me?"me":""}" data-b="${i}" title="${esc(nm)} — $${t.remaining} left, max $${t.max}">
+      ${i+1}. ${esc(nm)}<br><small>$${t.remaining}·${t.open}</small></button>`;
+  }).join("") + `<button class="tbtn" data-b="u">❓ Unknown</button>`;
+  const editing = editIdx!=null;
+  if(editing){
+    const s = S.sales[editIdx];
+    $("#sc-price").value = s.price;
+    $("#sc-buyer").value = s.buyer==null ? "u" : String(s.buyer+1);
+  } else { $("#sc-price").value=""; $("#sc-buyer").value=""; }
+  $("#sc-delete").style.display = editing ? "inline-block" : "none";   // "" would lose to the stylesheet's display:none
+  $("#sc-commit").textContent = editing ? "Save ✓" : "SOLD ✓";
+  updateResolve();
+  $("#salecard").classList.remove("hide");
+  setTimeout(()=>$("#sc-price").focus(), 0);
+}
+function updateResolve(){
+  $("#sc-resolve").innerHTML = resolveBuyer($("#sc-buyer").value).label;
+}
+function closeSale(){
+  $("#salecard").classList.add("hide");
+  saleCtx = null;
+  $("#search").value=""; renderTable();
+  setTimeout(()=>$("#search").focus(), 0);
+}
+function commitSale(buyerOverride){
+  if(!saleCtx) return;
+  const price = Math.round(+$("#sc-price").value);
+  if(!(price>=1)){ $("#sc-price").focus(); $("#sc-price").style.borderColor="var(--red)"; return; }
+  $("#sc-price").style.borderColor="";
+  let buyer;
+  if(buyerOverride!==undefined) buyer = buyerOverride;
+  else {
+    const r = resolveBuyer($("#sc-buyer").value);
+    if(r.buyer===undefined){ $("#sc-buyer").focus(); $("#sc-buyer").style.borderColor="var(--red)"; return; }
+    buyer = r.buyer;
+  }
+  $("#sc-buyer").style.borderColor="";
+  const sale = { id:saleCtx.id, name:saleCtx.name, pos:saleCtx.pos, price, buyer };
+  snap();
+  if(saleCtx.editIdx!=null) S.sales[saleCtx.editIdx] = sale;
+  else S.sales.push(sale);
+  const warns=[];
+  if(buyer!=null){
+    const t=calc().teams[buyer];
+    if(t.remaining<0) warns.push(`⚠ ${esc(t.name)} is $${-t.remaining} over budget`);
+    else if(t.remaining < t.open-1) warns.push(`⚠ ${esc(t.name)} can't fill remaining slots`);
+    if(t.bought>spots()) warns.push(`⚠ ${esc(t.name)} has more players than slots`);
+  }
+  const to = buyer==null ? "❓" : (buyer===S.me?"ME":esc(S.teams[buyer]));
+  closeSale(); persist(); render();
+  toast(`${fmtMoney(price)} <b>${esc(sale.name)}</b> → ${to}${warns.length?"<br>"+warns.join(" · "):""}`);
+}
+function snap(){
+  UNDO_STACK.push(JSON.stringify(S.sales));
+  if(UNDO_STACK.length>40) UNDO_STACK.shift();
+}
+function undo(){
+  const prev = UNDO_STACK.pop();
+  if(prev==null) return;
+  S.sales = JSON.parse(prev); persist(); render();
+  toast(`Undid last change — ${S.sales.length} sale${S.sales.length===1?"":"s"} on the books`);
+}
+function toast(html){
+  document.querySelectorAll(".toast").forEach(t=>t.remove());
+  const t = document.createElement("div"); t.className="toast";
+  t.innerHTML = html+` <button onclick="undo();this.parentElement.remove()">UNDO</button>`;
+  document.body.appendChild(t);
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.remove(), 4500);
+}
+
+/* ---------- my turn to nominate ---------- */
+function openNoms(){
+  const r = recommendations();
+  const hp = C.heat==null ? null : Math.round((C.heat-1)*100);
+  const me = C.teams[S.me];
+  const plan = r.endgame
+    ? `You're at <b>${fmtMoney(me.max)}</b> max — endgame. Nominate players <b>you actually want</b> now: with ${C.broke} teams broke, cheap guys can fall to you at $1.`
+    : `Nominate someone <b>you don't want</b> and let the room spend. `
+      + (hp==null ? "" : hp>4
+          ? `Room is <b>${hp}% hot</b> 🔥 — great time to put up expensive players; that money leaves for good.`
+          : hp<-4 ? `Room is <b>${Math.abs(hp)}% cold</b> 🧊 — everyone still has cash, so expect to be outbid; put up a pricey non-target anyway.`
+          : `Room is pricing at sheet.`)
+      + ` ${C.rivals} teams can still outbid you.`;
+  $("#nom-strategy").innerHTML = `<div class="nomplan">${plan}</div>`;
+  const rows = r.noms;
+  $("#nom-list").innerHTML = rows.length ? rows.map((x,i)=>`
+    <div class="nomrow" data-id="${esc(pid(x.p))}">
+      <span class="rank">${i+1}</span>
+      <span class="pos" style="background:var(--${x.p.pos})">${x.p.pos}</span>
+      <b>${esc(x.p.name)}</b> <span style="color:var(--dim)">${esc(x.p.team??"")}</span>${teamTag(x.p)}
+      <span class="why">${x.why.join(" · ")}</span>
+    </div>`).join("") : `<div style="color:var(--dim)">—</div>`;
+}
+
+/* ---------- catch-up bulk import ---------- */
+function findPlayers(q){
+  const nq = q.toLowerCase().replace(/[^a-z ]/g,"").replace(/\s+/g," ").trim();
+  if(!nq) return [];
+  const toks = nq.split(" ");
+  const scored=[];
+  for(const p of DATA.players){
+    const nn = p.name.toLowerCase().replace(/[^a-z ]/g,"");
+    let sc=0;
+    if(nn===nq) sc=100;
+    else if(nn.includes(nq)) sc=80;
+    else if(toks.every(t=>nn.split(" ").some(w=>w.startsWith(t)))) sc=60;
+    else if(toks.every(t=>nn.includes(t))) sc=40;
+    if(sc) scored.push({p, sc: sc + Math.max(0, 3 - (ecr(p)??999)/100)}); // slight better-player tiebreak
+  }
+  return scored.sort((a,b)=>b.sc-a.sc).slice(0,3);
+}
+function parseImportLine(line, seen){
+  const raw = line.trim();
+  if(!raw) return null;
+  const toks = raw.replace(/[,$]/g," ").split(/\s+/).filter(Boolean);
+  let priceIdx=-1;
+  for(let i=toks.length-1;i>=0;i--) if(/^\d+$/.test(toks[i])){ priceIdx=i; break; }
+  if(priceIdx<1) return {raw, err:"no price"};
+  let price=+toks[priceIdx], buyerToks=toks.slice(priceIdx+1);
+  if(priceIdx>=2 && /^\d+$/.test(toks[priceIdx-1]) && !buyerToks.length){
+    // "chase 60 14" = $60 to team 14. If that trailing int is NOT a team number it is a typo —
+    // never silently treat it as the price (that would import $17 instead of $88).
+    if(price>=1 && price<=S.teams.length){ buyerToks=[toks[priceIdx]]; price=+toks[priceIdx-1]; priceIdx--; }
+    else return {raw, err:`"${toks[priceIdx]}" is not a team # (1-${S.teams.length}) — use a name, or delete it`};
+  }
+  const query = toks.slice(0,priceIdx).join(" ");
+  const buyerGiven = buyerToks.length>0;
+  const rb = resolveBuyer(buyerToks.join(" "));
+  const cands = findPlayers(query);
+  let status="bad", p=null;
+  if(cands.length){
+    const clear = cands.length===1 || cands[0].sc-cands[1].sc>=15 || cands[0].sc>=100;
+    if(cands[0].sc>=40 && clear){ p=cands[0].p; status = seen.has(pid(p)) ? "dupe" : "ok"; }
+    else status="amb";
+  }
+  // a buyer that was typed but didn't resolve must NOT quietly become Unknown
+  if(status==="ok" && buyerGiven && rb.buyer===undefined) status="badbuyer";
+  return {raw, price, buyer: rb.buyer===undefined?null:rb.buyer, buyerLabel: rb.label, buyerGiven, cands, p, status};
+}
+function parseImport(txt){   // running `seen` so a player repeated inside one paste is caught as a dupe
+  const seen = new Set(S.sales.map(s=>s.id).filter(Boolean));
+  return txt.split("\n").map(l=>{
+    const r = parseImportLine(l, seen);
+    if(r && r.status==="ok" && r.p) seen.add(pid(r.p));
+    return r;
+  }).filter(Boolean);
+}
+function renderImportPreview(){
+  const txt = $("#im-text").value;
+  if(txt.trim().startsWith("{")){
+    try{
+      const j=JSON.parse(txt);
+      if(Array.isArray(j.sales)){
+        $("#im-preview").innerHTML = `<div class="ok">Full state JSON: ${j.sales.length} sales — Apply replaces the whole auction.</div>`;
+        return;
+      }
+    }catch(e){}
+    $("#im-preview").innerHTML = `<div class="bad">Looks like JSON but can't parse a .sales array.</div>`;
+    return;
+  }
+  const rows = parseImport(txt);
+  const okCount = rows.filter(r=>r.status==="ok").length;
+  const skipped = rows.length - okCount;
+  $("#im-preview").innerHTML = rows.map(r=>{
+    if(r.err) return `<div class="row bad">✗ ${esc(r.raw)} — ${esc(r.err)}</div>`;
+    if(r.status==="ok") return `<div class="row"><span class="ok">✓</span> ${esc(r.p.name)} (${r.p.pos}) ${fmtMoney(r.price)} ${r.buyerLabel}</div>`;
+    if(r.status==="dupe") return `<div class="row amb">≡ ${esc(r.p.name)} already sold — skipped</div>`;
+    if(r.status==="badbuyer") return `<div class="row bad">✗ ${esc(r.p.name)} ${fmtMoney(r.price)} — buyer ${r.buyerLabel}; fix the name or leave it blank for Unknown</div>`;
+    if(r.status==="amb") return `<div class="row amb">? ${esc(r.raw)} — ambiguous: ${r.cands.map(c=>esc(c.p.name)+" ("+c.p.pos+")").join(" / ")}</div>`;
+    return `<div class="row bad">✗ ${esc(r.raw)} — no player match</div>`;
+  }).join("") || `<div style="color:var(--dim)">nothing yet</div>`;
+  if(rows.length) $("#im-preview").innerHTML +=
+    `<div style="margin-top:6px;color:var(--dim)"><b style="color:var(--text)">Apply adds ${okCount}</b>${skipped?` · ${skipped} line${skipped>1?"s":""} skipped (fix above or enter by hand)`:""}</div>`;
+}
+function applyImport(){
+  const txt = $("#im-text").value;
+  if(txt.trim().startsWith("{")){
+    try{
+      const j=JSON.parse(txt);
+      if(Array.isArray(j.sales) && confirm(`Replace current auction with pasted state (${j.sales.length} sales)?`)){
+        S = {...S, ...j};
+        $("#importmodal").classList.add("hide"); $("#im-text").value="";
+        persist(); render(); toast(`Restored ${S.sales.length} sales`);
+      }
+    }catch(e){ alert("Bad JSON"); }
+    return;
+  }
+  const rows = parseImport(txt).filter(r=>r.status==="ok");
+  snap();
+  for(const r of rows) S.sales.push({id:pid(r.p), name:r.p.name, pos:r.p.pos, price:r.price, buyer:r.buyer});
+  $("#importmodal").classList.add("hide"); $("#im-text").value="";
+  persist(); render();
+  toast(`Added ${rows.length} sale${rows.length===1?"":"s"} — fix ambiguous lines one by one`);
+}
+
+/* ---------- persistence ---------- */
+// opened as a plain file (emailed copy), some browsers throw on localStorage — never let that kill a sale
+const store = {
+  get(){ try{ return localStorage.getItem("ffauction-v1"); }catch(e){ return null; } },
+  set(v){ try{ localStorage.setItem("ffauction-v1", v); }catch(e){} },
+};
+function persist(){
+  store.set(JSON.stringify(S));
+  if(location.protocol.startsWith("http")){
+    calc();
+    const payload = { ...S, at:new Date().toISOString(),
+      infl:+C.infl.toFixed(3), remainingCash:C.remainingCash, openLeague:C.openLeague,
+      teamsCalc:C.teams.map(t=>({name:t.name, spent:t.spent, left:t.remaining, open:t.open, max:t.max})),
+      unknown:{cash:C.unkCash, count:C.unkCount},
+      myRoster:assignRoster().map(s=>({slot:s.lbl, player:s.p?.name??null, price:s.p?.price??null})),
+      buys:DATA?recommendations().buys.map(r=>r.p.name):[] };
+    fetch("/auction_state",{method:"POST",body:JSON.stringify(payload)}).catch(()=>{});
+  }
+}
+
+/* ---------- rendering ---------- */
+function render(){
+  calc();
+  const ip = C.infl;
+  const hp = C.heat==null ? null : Math.round((C.heat-1)*100);
+  $("#heatchip").innerHTML = hp==null
+    ? `Room <b>—</b>`
+    : `Room <b>${hp>0?"+"+hp:hp}%</b> ${hp>4?"🔥":hp<-4?"🧊":""}`;
+  $("#heatchip").style.border = "1px solid";
+  $("#heatchip").style.borderColor = hp==null ? "var(--line)" : hp>4 ? "var(--red)" : hp<-4 ? "var(--green)" : "var(--line)";
+  $("#heatchip").title = hp==null ? "How hot the room is: paid vs sheet value on players sold. Needs a few sales."
+    : `Room has paid ${fmtMoney(C.paid)} for ${fmtMoney(C.sheetVal)} of sheet value (${hp>0?"+"+hp:hp}%). `
+      + (hp>4 ? "To WIN a player you must pay up — but that money is gone for good, so late bargains are coming."
+        : hp<-4 ? "Everyone still has cash and will keep bidding — hold, don't overpay to chase."
+        : "Room is pricing at sheet.");
+
+  $("#inflchip").innerHTML = `Ahead <b>×${ip.toFixed(2)}</b> · ${fmtMoney(C.remainingCash)} left`;
+  $("#inflchip").style.borderColor = ip>1.05 ? "var(--red)" : ip<0.95 ? "var(--green)" : "var(--line)";
+  $("#inflchip").style.border = "1px solid";
+  $("#inflchip").title = "What's still to come: remaining cash ÷ remaining sheet value. This is what Now$ and Bid to are scaled by.";
+  const me = C.teams[S.me];
+  $("#mychip").innerHTML = me ? `ME: <b>${fmtMoney(me.remaining)}</b> left · max bid <b>${fmtMoney(me.max)}</b> · ${me.open} open` : "—";
+  $("#rivalchip").innerHTML = `<b>${C.rivals}</b> can outbid · <b>${C.broke}</b> broke`;
+  $("#rivalchip").style.border = "1px solid";
+  $("#rivalchip").style.borderColor = C.rivals===0 ? "var(--green)" : "var(--line)";
+  $("#rivalchip").title = C.rivals===0 ? "Nobody can outbid you — take what you want at $1 over." : `${C.rivals} teams have both an open slot and a max bid ≥ yours. ${C.broke} are effectively done shopping.`;
+  $("#fmtsel").value = S.fmt;
+
+  const recs = DATA ? recommendations() : {buys:[],noms:[],endgame:false};
+  const card = (x)=>`
+    <div class="rec" data-id="${esc(x.p? pid(x.p):"")}">
+      <div class="nm"><span class="pos" style="background:var(--${x.p.pos})">${x.p.pos}</span> ${esc(x.p.name)}</div>
+      <div class="why">${x.why.slice(0,2).join(" · ")||"&nbsp;"}</div>
+    </div>`;
+  // Buy owns the whole strip (consulted on every nomination). Nominations get the gold button +
+  // its modal — a distinct moment, ~12 times a draft, and nothing gets cut off at laptop widths.
+  $("#recs").innerHTML =
+    `<div class="recgroup buy"><span class="rghead">Buy</span>${recs.buys.map(card).join("")||'<div style="color:var(--dim);align-self:center">—</div>'}</div>`;
+  const top = recs.noms[0];
+  $("#nomsbtn").innerHTML = top
+    ? `🎤 ${recs.endgame?"$1 target":"Nominate"}: <b>${esc(top.p.name)}</b>${teamTag(top.p)}`
+    : `🎤 My nomination`;
+  $("#nomsbtn").title = top
+    ? `Your turn? Put up ${top.p.name} — ${top.why.join(" · ").replace(/<[^>]+>/g,"")}. Click for the full list.`
+    : "Who to nominate when it's your turn";
+
+  renderTable(); renderRight();
+}
+
+function renderTable(){
+  if(!DATA) return;
+  const q = $("#search").value.trim().toLowerCase();
+  const showGone = $("#showgone").checked;
+  const gone = new Set(S.sales.map(s=>s.id).filter(Boolean));
+  const soldPrice = new Map(S.sales.filter(s=>s.id).map(s=>[s.id, s]));
+  const rows = DATA.players
+    .filter(p=>posFilter==="ALL"||p.pos===posFilter)
+    .filter(p=>!q || p.name.toLowerCase().includes(q) || (p.team||"").toLowerCase()===q)
+    .filter(p=>showGone || !gone.has(pid(p)))
+    .sort((a,b)=>(base(b)-base(a)) || ((ecr(a)??9999)-(ecr(b)??9999)))
+    .slice(0,250);
+  const wrap = $("#tablewrap"), st = wrap.scrollTop;
+  $("#tbody").innerHTML = rows.map(p=>{
+    const isGone = gone.has(pid(p));
+    const b = inPool(p)?base(p):null, n = inPool(p)?now$(p):null;
+    const d = (b!=null&&!isGone) ? b-n : null;   // + = discount vs sheet
+    const sold = soldPrice.get(pid(p));
+    return `<tr class="p ${isGone?"gone":""}" data-id="${esc(pid(p))}">
+      <td class="money">${b!=null?fmtMoney(b):"—"}</td>
+      <td class="money">${isGone&&sold?`sold ${fmtMoney(sold.price)}`:(n!=null?fmtMoney(n):"—")}</td>
+      <td class="${d>2?"val-good":d<-2?"val-bad":""}">${d==null||!d?"":(d>0?"+"+d:d)}</td>
+      <td><span class="pos" style="background:var(--${p.pos})">${p.pos}${p.posRank?.[S.fmt]??""}</span></td>
+      <td><b>${esc(p.name)}</b>${teamTag(p)}${NOTES[p.name]?`<span class="newsdot" title="${esc(NOTES[p.name].note)}">${NEWS_ICON[NOTES[p.name].action]||""}</span>`:""}</td>
+      <td class="mb">${p.team??"—"}</td><td class="mb">${p.bye??"—"}</td>
+      <td>${ecr(p)??"—"}</td><td class="tier">${tier(p)!=null?"T"+tier(p):"—"}</td>
+    </tr>`;}).join("");
+  wrap.scrollTop = st;
+}
+
+function renderRight(){
+  const me = C.teams[S.me];
+  $("#mybudget").innerHTML = me ? `${fmtMoney(me.remaining)} · max ${fmtMoney(me.max)}` : "";
+  $("#roster").innerHTML = assignRoster().map(s=>`
+    <div class="slotrow"><span class="lbl">${s.lbl}</span>
+      ${s.p ? `<span><span class="pos" style="background:var(--${s.p.pos in {QB:1,RB:1,WR:1,TE:1,K:1,DST:1}?s.p.pos:"DST"});font-size:10px;width:28px">${esc(s.p.pos)}</span> ${esc(s.p.name)}</span><span class="pr">${fmtMoney(s.p.price)}</span>`
+            : `<span class="empty">—</span>`}</div>`).join("");
+  $("#teamgrid").innerHTML =
+    `<tr><th></th><th></th><th>$</th><th>max</th><th>open</th></tr>` +
+    C.teams.map((t,i)=>`<tr class="${i===S.me?"me":""} ${t.max<=1?"broke":""}">
+      <td>${i+1}</td><td>${esc(t.name)}</td><td>${t.remaining}</td><td>${t.max}</td><td>${t.open}</td></tr>`).join("") +
+    (C.unkCount?`<tr><td>?</td><td>Unknown</td><td colspan="3">${C.unkCount} sale${C.unkCount>1?"s":""} · ${fmtMoney(C.unkCash)}</td></tr>`:"");
+  $("#feed").innerHTML = S.sales.slice(-14).reverse().map(s=>{
+    const i = S.sales.lastIndexOf(s);
+    const to = s.buyer==null ? "❓" : (s.buyer===S.me ? "ME" : esc(S.teams[s.buyer]));
+    return `<div data-i="${i}">${fmtMoney(s.price)} <b>${esc(s.name)}</b> <span style="font-size:10px">${esc(s.pos)}</span> → ${to}</div>`;
+  }).join("") || `<div style="color:var(--dim);cursor:default">no sales yet</div>`;
+}
+
+/* ---------- setup ---------- */
+function refreshMeSelect(){
+  const cur = Math.min(S.me, S.teams.length-1);
+  $("#s-me").innerHTML = S.teams.map((n,i)=>`<option value="${i}">${i+1}. ${esc(n)}</option>`).join("");
+  $("#s-me").value = cur;
+}
+function openSetup(){
+  $("#s-budget").value = S.budget; $("#s-empty").value = S.leaveEmpty;
+  refreshMeSelect();
+  $("#s-roster").innerHTML = Object.keys(DEFAULT_ROSTER).map(k=>
+    `<span>${k}<input data-k="${k}" type="number" min="0" max="9" value="${S.roster[k]??DEFAULT_ROSTER[k]}"></span>`).join("");
+  renderSetupTeams();
+  updateSummary();
+  $("#setup").classList.remove("hide");
+}
+function renderSetupTeams(){   // editable roster of GMs — someone always drops out or brings a friend
+  $("#s-teams").innerHTML = S.teams.map((n,i)=>
+    `<span class="trow"><b>${i+1}</b><input data-i="${i}" value="${esc(n)}"><button class="delteam" data-i="${i}" title="Remove this team">✕</button></span>`).join("")
+    + `<button id="addteam" style="grid-column:1/-1;font-size:12px">+ Add team</button>`;
+}
+function readSetupTeamNames(){
+  const names = [];
+  document.querySelectorAll("#s-teams input").forEach(i=>names[+i.dataset.i] = i.value.trim() || S.teams[+i.dataset.i]);
+  return names.filter(n=>n!=null);
+}
+function updateSummary(){
+  const spec = {}; document.querySelectorAll("#s-roster input").forEach(i=>spec[i.dataset.k]=+i.value||0);
+  const n = Object.values(spec).reduce((a,b)=>a+b,0);
+  const t = document.querySelectorAll("#s-teams input").length || S.teams.length;
+  const budget = +$("#s-budget").value||0;
+  $("#s-summary").innerHTML = `<b>${t} teams</b> × ${n} spots = ${n*t} slots · <b>${fmtMoney(budget*t)}</b> in the room`
+    + (t!==16 ? `<br><span style="color:var(--gold)">Values were priced for 16 teams — inflation auto-corrects on the fly. For exact values re-run: <code>python3 tools/fetch_data.py --teams ${t}</code></span>` : "");
+}
+
+/* ---------- boot ---------- */
+async function boot(){
+  try {
+    DATA = window.INLINE_DATA || null;              // standalone build inlines the data; served build fetches it
+    if(!DATA){
+      const res = await fetch("data/players.json");
+      if(!res.ok) throw new Error(res.status);
+      DATA = await res.json();
+    }
+    DATA.players.forEach(p=>byId.set(pid(p),p));
+    const withAuction = DATA.players.filter(p=>p.auction).length;
+    const b=$("#banner");
+    b.style.display="block"; b.style.background="var(--panel2)";
+    b.innerHTML=`Data: ${DATA.players.length} players (${withAuction} priced for ${DATA.auction?.teams??16}-team $${DATA.auction?.budget??200}) · fetched ${DATA.fetched_at?.slice(0,16).replace("T"," ")} UTC`;
+    setTimeout(()=>b.style.display="none", 6000);
+    if(!withAuction){ b.style.background="var(--red)"; b.textContent="players.json has no auction values — re-run: python3 tools/fetch_data.py"; b.style.display="block"; }
+  } catch(e){
+    $("#banner").style.display="block";
+    $("#banner").textContent = "Could not load data/players.json — run:  python3 tools/serve.py  and open http://localhost:8712/auction.html (after python3 tools/fetch_data.py)";
+  }
+  if(!Object.keys(NOTES).length) try {   // news flags — advisory only; INLINE_NOTES wins in the standalone build
+    const nr = await fetch("data/notes.json", {cache:"no-store"});
+    if(nr.ok){ const nj = await nr.json(); NOTES = nj.notes || {}; }
+  } catch(e){}
+
+  const saved = store.get();
+  if(saved){ try{
+    const j = JSON.parse(saved);
+    if(j.v === S.v) S = {...S, ...j};
+    else S = {...S, sales: Array.isArray(j.sales) ? j.sales : []};  // config changed in code — keep sales, take fresh settings
+  }catch(e){} }
+  if(!S.configured) openSetup();
+
+  const posTabs = ["ALL",...POS_ORDER];
+  $("#postabs").innerHTML = posTabs.map(t=>`<button class="postab ${t===posFilter?"on":""}" data-pos="${t}">${t}</button>`).join("");
+
+  /* events */
+  $("#postabs").addEventListener("click",e=>{ const b=e.target.closest(".postab"); if(!b) return;
+    posFilter=b.dataset.pos; document.querySelectorAll(".postab").forEach(x=>x.classList.toggle("on",x===b)); renderTable(); });
+  $("#tbody").addEventListener("click",e=>{ const tr=e.target.closest("tr.p"); if(!tr) return;
+    if(tr.classList.contains("gone")){ // clicking a sold row = fix that sale
+      const i=S.sales.findIndex(s=>s.id===tr.dataset.id);
+      if(i>=0){ const s=S.sales[i]; openSale(s.id, s.name, s.pos, i); }
+      return;
+    }
+    openSale(tr.dataset.id); });
+  $("#recs").addEventListener("click",e=>{ const c=e.target.closest(".rec"); if(c&&c.dataset.id) openSale(c.dataset.id); });
+  $("#feed").addEventListener("click",e=>{ const d=e.target.closest("div[data-i]"); if(!d) return;
+    const s=S.sales[+d.dataset.i]; if(s) openSale(s.id, s.name, s.pos, +d.dataset.i); });
+  $("#search").addEventListener("input",renderTable);
+  $("#search").addEventListener("keydown",e=>{
+    if(e.key==="Enter"){ const tr=document.querySelector("#tbody tr.p:not(.gone)"); if(tr) openSale(tr.dataset.id); }
+  });
+  $("#showgone").addEventListener("change",renderTable);
+  $("#fmtsel").addEventListener("change",e=>{ S.fmt=e.target.value; persist(); render(); });
+  $("#undobtn").onclick=undo;
+  $("#setupbtn").onclick=openSetup;
+  $("#catchupbtn").onclick=()=>{ $("#importmodal").classList.remove("hide"); renderImportPreview(); setTimeout(()=>$("#im-text").focus(),0); };
+  $("#nomsbtn").onclick=()=>{ openNoms(); $("#nomsmodal").classList.remove("hide"); };
+  $("#nom-close").onclick=()=>$("#nomsmodal").classList.add("hide");
+  $("#nom-list").addEventListener("click",e=>{ const r=e.target.closest(".nomrow"); if(!r) return;
+    $("#nomsmodal").classList.add("hide"); openSale(r.dataset.id); });   // nominated it -> record the sale
+  $("#unlisted").onclick=()=>{
+    const n=prompt("Player name (not in database):"); if(!n) return;
+    const pos=(prompt("Position (QB/RB/WR/TE/K/DST):","WR")||"?").toUpperCase();
+    openSale(null, n.trim(), POS_ORDER.includes(pos)?pos:"?");
+  };
+  $("#exportbtn").onclick=()=>{ navigator.clipboard.writeText(JSON.stringify(S)); toast("State copied — paste into Catch up on any device, or to Claude"); };
+  $("#resetbtn").onclick=()=>{ if(confirm("Clear ALL sales?")){ snap(); S.sales=[]; persist(); render(); } };
+
+  /* sale card */
+  $("#sc-buyer").addEventListener("input",updateResolve);
+  $("#sc-price").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); $("#sc-buyer").focus(); } });
+  $("#sc-buyer").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); commitSale(); } });
+  $("#sc-commit").onclick=()=>commitSale();
+  $("#sc-cancel").onclick=closeSale;
+  $("#sc-delete").onclick=()=>{ if(saleCtx?.editIdx!=null){ snap(); const x=S.sales.splice(saleCtx.editIdx,1)[0]; closeSale(); persist(); render(); toast(`Deleted sale: ${esc(x.name)} ${fmtMoney(x.price)}`); } };
+  $("#teambtns").addEventListener("click",e=>{ const b=e.target.closest(".tbtn"); if(!b) return;
+    commitSale(b.dataset.b==="u" ? null : +b.dataset.b); });
+
+  /* import modal */
+  $("#im-text").addEventListener("input",renderImportPreview);
+  $("#im-apply").onclick=applyImport;
+  $("#im-cancel").onclick=()=>$("#importmodal").classList.add("hide");
+
+  /* keyboard */
+  document.addEventListener("keydown",e=>{
+    const modalOpen = document.querySelector(".modal:not(.hide)");
+    const el = document.activeElement;
+    // the empty search box always holds focus after a commit — don't let it swallow Cmd+Z
+    const typing = ["INPUT","SELECT","TEXTAREA"].includes(el?.tagName) && !(el.id==="search" && !el.value);
+    if((e.metaKey||e.ctrlKey)&&e.key==="z"){ if(typing||modalOpen) return; e.preventDefault(); undo(); }
+    else if(e.key==="Escape"){
+      if(!$("#salecard").classList.contains("hide")) closeSale();
+      else if(!$("#nomsmodal").classList.contains("hide")) $("#nomsmodal").classList.add("hide");
+      else if(!$("#importmodal").classList.contains("hide")) $("#importmodal").classList.add("hide");
+      else if(!$("#setup").classList.contains("hide") && S.configured) $("#setup").classList.add("hide");
+      else { $("#search").value=""; renderTable(); }
+    }
+    else if(e.key.length===1 && !e.metaKey && !e.ctrlKey && !modalOpen && document.activeElement.tagName!=="INPUT"){ $("#search").focus(); }
+  });
+
+  /* setup events */
+  $("#s-roster").addEventListener("input",updateSummary);
+  $("#s-budget").addEventListener("input",updateSummary);
+  $("#s-teams").addEventListener("click",e=>{
+    if(e.target.id==="addteam"){
+      S.teams = [...readSetupTeamNames(), "Team "+(S.teams.length+1)];
+      renderSetupTeams(); refreshMeSelect(); updateSummary(); return;
+    }
+    const del = e.target.closest(".delteam"); if(!del) return;
+    if(S.teams.length<=2) return;
+    const i = +del.dataset.i;
+    const names = readSetupTeamNames();
+    const sold = S.sales.filter(s=>s.buyer===i).length;
+    if(sold && !confirm(`${names[i]} has ${sold} sale${sold>1?"s":""} recorded — remove anyway? Those sales become Unknown.`)) return;
+    S.sales = S.sales.map(s=> s.buyer===i ? {...s, buyer:null} : (s.buyer>i ? {...s, buyer:s.buyer-1} : s));
+    if(S.me===i) S.me = 0; else if(S.me>i) S.me--;
+    names.splice(i,1); S.teams = names;
+    renderSetupTeams(); refreshMeSelect(); updateSummary();
+  });
+  $("#startbtn").onclick=()=>{
+    S.budget=+$("#s-budget").value||200; S.leaveEmpty=+$("#s-empty").value||0;
+    document.querySelectorAll("#s-roster input").forEach(i=>S.roster[i.dataset.k]=+i.value||0);
+    S.teams = readSetupTeamNames();
+    S.me = Math.min(+$("#s-me").value||0, S.teams.length-1);
+    S.configured=true; $("#setup").classList.add("hide"); persist(); render();
+  };
+  render();
+}
+boot();
+</script>
+</body>
+</html>
